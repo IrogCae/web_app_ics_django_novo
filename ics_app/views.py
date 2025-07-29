@@ -91,7 +91,14 @@ def home(request: HttpRequest) -> HttpResponse:
     
     # tratamento POST editar Propensão de Gasto
     if request.method == 'POST' and main_tab == 'Iniciativa' and sub_tab.lower() == 'dados_iniciativa':
-        form = ProvisaoGastoForm(request.POST)
+        provisao_pk = request.POST.get('provisao_pk', '').strip()
+        if provisao_pk:
+            # Edição
+            obj = ProvisaoGasto.objects.filter(pk=provisao_pk).first()
+            form = ProvisaoGastoForm(request.POST, instance=obj)
+        else:
+            # Novo
+            form = ProvisaoGastoForm(request.POST)
         if form.is_valid():
             form.save()
         return redirect(request.path + '?main_tab=Iniciativa&sub_tab=dados_iniciativa')
@@ -718,4 +725,13 @@ def aprovar_rda(request, pk):
 
     rda.delete()
 
+    return JsonResponse({"success": True})
+
+
+@login_required
+def excluir_provisao_gasto(request, pk):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método não permitido"}, status=405)
+    obj = get_object_or_404(ProvisaoGasto, pk=pk)
+    obj.delete()
     return JsonResponse({"success": True})
