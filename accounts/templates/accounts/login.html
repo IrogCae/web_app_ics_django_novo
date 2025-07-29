@@ -1,0 +1,42 @@
+{% extends "ics_app/base.html" %}
+
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static '/ics_app/css/style.css' %}">
+
+<div class="position-relative d-flex align-items-center justify-content-center min-vh-100">
+  <img src="{% static 'ics_app/images/background.png' %}"
+       alt="bg"
+       class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
+       style="z-index:1;">
+  <div class="stellantis-card" 
+       style="z-index:2; max-width:400px; width:100%;">
+    <h3 class="text-center mb-4">Login</h3>
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="mb-3">
+        <label for="username" class="form-label">Usuário</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

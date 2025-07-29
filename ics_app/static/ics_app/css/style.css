@@ -1,0 +1,202 @@
+.header-stellantis {
+  background-color: #003865 !important;
+  color: white !important;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-stellantis .logo-img {
+  height: 50px;
+  width: auto;
+}
+
+.header-stellantis h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0;
+}
+
+.header-stellantis p {
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+
+.header-stellantis {
+  background-color: #003865 !important;
+  color: white !important;
+  text-align: center;
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+}
+
+/* Cor Stellantis nos botões */
+.btn-primary {
+  background-color: #003865 !important;
+  border-color: #003865 !important;
+}
+
+.btn-outline-primary {
+  color: #003865 !important;
+  border-color: #003865 !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: #003865 !important;
+  color: white !important;
+}
+
+/* Aba ativa (nav-tabs e nav-pills) */
+.nav-tabs .nav-link.active,
+.nav-pills .nav-link.active {
+  background-color: #003865 !important;
+  color: white !important;
+  border-color: #003865 !important;
+}
+
+/* Aba inativa com hover */
+.nav-tabs .nav-link:hover,
+.nav-pills .nav-link:hover {
+  color: #003865 !important;
+}
+
+/* Aba padrão (não ativa) */
+.nav-tabs .nav-link,
+.nav-pills .nav-link {
+  color: #003865 !important;
+}
+
+.table thead th {
+  text-align: center !important;
+  background-color: #0f375b !important;
+  color: white;
+}
+
+/* Linha selecionada (destaque real, ignorando o striping do Bootstrap) */
+.table tbody tr.table-active {
+  background-color: #62aee9 !important;  /* cor de destaque */
+  color: #fff !important;
+  white-space: nowrap
+}
+
+.table tbody tr.table-active td {
+  background-color: #62aee9 !important;  /* força o fundo também nas <td> */
+  color: #fff !important;
+  white-space: nowrap
+}
+
+
+.table-responsive {
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  line-break: 1.2;
+  padding: 0.5rem;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 0.5re;
+  white-space: nowrap;
+}
+
+/* Linha da tabela selecionada (ativa) */
+.table tbody tr.table-active {
+  background-color: #123c5c !important; /* variação mais escura de #0f375b */
+  color: white !important;
+}
+
+.table tbody tr.table-active td {
+  color: white !important;
+}
+
+/* Garante que texto de botão primário continue branco no hover */
+.btn-primary:hover,
+.btn-primary:focus {
+  color: white !important;
+}
+
+/* Garante que abas ativas mantenham texto branco no hover */
+.nav-tabs .nav-link.active:hover,
+.nav-pills .nav-link.active:hover {
+  color: white !important;
+}
+
+/* === Estilo específico para pleitos_dash.html === */
+body.stellantis-dark {
+  background-color: #003865;
+  color: white;
+}
+
+.stellantis-card {
+  background-color: white;
+  color: #003865;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+}
+
+h6.text-center {
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+canvas {
+  background-color: #fff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+a.btn {
+  font-weight: bold;
+}
+
+/* Botão de voltar destacado no modo escuro */
+.btn-back-light {
+  background-color: white !important;
+  color: #003865 !important;
+  border: 1px solid #003865 !important;
+  font-weight: bold;
+}
+
+.btn-back-light:hover {
+  background-color: #f0f0f0 !important;
+  color: #003865 !important;
+}
+
+ img  {
+  /* background-color: #003865;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  display: flex; 
+  justify-content: center; */
+  width: 30px;
+  height: 100px;
+}
+
+/* Garante que o container continue rolando normalmente */
+.table-responsive {
+  max-height: 300px;
+  overflow-y: auto;
+  position: relative; /* necessário para o sticky funcionar */
+  white-space: nowrap;
+}
+
+/* Torna os <th> “grudados” no topo do .table-responsive */
+.table-responsive thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;              /* acima das linhas */
+  background-color: inherit; /* ou a cor que seu thead já usa */
+  white-space: nowrap;
+}
+
+.table-responsive th,
+.table-responsive td {
+  white-space: nowrap;
+  word-break: keep-all;
+}

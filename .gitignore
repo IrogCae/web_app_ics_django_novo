@@ -1,0 +1,23 @@
+# Ambiente virtual Python
+.venv/
+env/
+venv/
+
+# Arquivos Django
+__pycache__/
+db.sqlite3
+*.pyc
+
+# Configuração sensível
+.env
+
+# Dados e Excel reais
+/data/
+*.xlsx
+*.xls
+*.csv
+
+# VS Code e outros
+.vscode/
+.idea/
+*.log

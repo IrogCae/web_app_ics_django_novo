@@ -1,0 +1,32 @@
+{% extends "ics_app/base.html" %}
+{% load static %}
+
+{% block content %}
+  {# — nav das abas principais — #}
+  <ul class="nav nav-tabs mb-3">
+    {% for tab in main_tabs %}
+      <li class="nav-item">
+        <a class="nav-link {% if tab == main_tab %}active{% endif %}"
+           href="{% if tab == 'Iniciativas' %}{% url 'dashboard_iniciativas' %}{% else %}?main_tab={{ tab }}{% endif %}">
+          {{ tab }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {# — nav das sub-abas de “Iniciativas” — #}
+  <ul class="nav nav-pills mb-3">
+    {% for sheet in sub_tabs %}
+      <li class="nav-item">
+        <a class="nav-link {% if sheet == sub_tab %}active{% endif %}"
+           href="{% url 'dashboard_iniciativas' %}?sub_tab={{ sheet }}">
+          {{ sheet|capfirst }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+{% with filename=sub_tab|slugify %}
+  {% include "ics_app/iniciativas/"|add:filename|add:".html" %}
+{% endwith %}
+{% endblock %}

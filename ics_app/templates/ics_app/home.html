@@ -1,0 +1,1367 @@
+{% extends "ics_app/base.html" %}
+{% load static %}
+{% load formatadores %}
+{% now "U" as now %}
+
+{% block content %}
+  <div class="container-fluid">
+
+    <!-- ===== Main Tabs ===== -->
+    <ul class="nav nav-tabs mb-3">
+      {% for tab in main_tabs %}
+        <li class="nav-item">
+          <a class="nav-link {% if tab == main_tab %}active{% endif %}" href="?main_tab={{ tab }}">{{ tab }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <!-- ===== Sub-Tabs ===== -->
+    <ul class="nav nav-pills mb-3">
+      {% for sheet in sub_tabs %}
+        <li class="nav-item">
+          <a class="nav-link {% if sheet == sub_tab %}active{% endif %}"
+             href="?main_tab={{ main_tab }}&sub_tab={{ sheet }}">
+            {% if sheet == 'dados_iniciativa' %}
+              Iniciativas
+            {% elif sheet == 'rda_sem_pedido' %}
+              RDA
+            {% else %}
+              {{ sheet|capfirst }}
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <!-- ======================= Iniciativa Section ======================= -->
+    {% if main_tab == 'Iniciativa' %}
+
+      {% if sub_tab == 'dados_iniciativa' %}
+  
+      <!-- Botão Editar/Inserir Nova Provisão de Gasto -->
+      <div class="mb-3">
+        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNovaPropensao">Inserir Propensão de Gasto</button>
+        <button id="btn-editar-provisao" class="btn btn-outline-primary btn-sm">Editar Propensão de Gasto</button>
+      </div>
+
+      <!-- Modal Nova Propensão de Gasto -->
+      <div class="modal fade" id="modalNovaPropensao" tabindex="-1" aria-labelledby="novaPropensaoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post" autocomplete="off">
+              {% csrf_token %}
+              <input type="hidden" name="main_tab" value="{{ main_tab }}">
+              <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+              <input type="hidden" name="provisao_pk" id="provisao_pk">  <!-- campo PK para edição -->
+              <div class="modal-header">
+                <h5 class="modal-title" id="novaPropensaoLabel">Inserir Propensão de Gasto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body">
+                {% for field in form_provisao %}
+                  <div class="mb-2">
+                    {{ field.label_tag }}{{ field }}
+                    {% if field.help_text %}
+                      <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                      <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success btn-sm">Salvar</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner NOVA PROVISAO -->
+      <div class="text-center py-1 mb-1"
+        style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+            line-height: 1.1; border-radius: 0.5rem;">
+        NOVA PROVISÃO (PLEITOS OFF)
+      </div>
+
+      <!-- Linhas com valores e cálculos das INICIATIVAS -->
+      <div class="d-flex justify-content-center gap-2 my-1">
+
+        <!-- Total de Provisões -->
+        <div class="d-flex flex-column gap-1">
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Total de Provisões:</span>
+              <strong>{{ total_iniciativas }}</strong>
+            </div>
+          </div>
+        </div>
+        <!-- Valor Total de Provisões -->
+        <div class="d-flex flex-column gap-1">
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Valor Total de Provisões:</span>
+              <strong>{{ total_iniciativas }}</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TABELA NOVA PROVISAO -->
+      <div class="table-responsive" style="max-height:300px;overflow-y:auto;font-size:0.75rem;line-height:1.2;border:1px solid #ddd;padding:.5rem; margin-bottom: 1cm;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                {% for h in headers_provisao %}
+                  <th class="align-middle">{{ h }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for obj in provisoes %}
+                <tr data-id="{{ obj.pk }}">
+                  {% for field_name in provisao_fields %}
+                    <td class="text-center">
+                      {% if field_name == "provisao" %}
+                        {{ obj|get_item:field_name|moeda_brasileira }}
+                      {% else %}
+                        {{ obj|get_item:field_name }}
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="{{ headers_provisao|length }}" class="text-center">Nenhum registro encontrado.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+      </div>
+      
+      <!-- Botão Editar/Inserir Nova Iniciativa -->
+      <div class="mb-3">
+        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNovaIniciativa">Inserir Iniciativa Nova</button>
+        <button id="btn-editar-iniciativa" class="btn btn-outline-primary btn-sm">Editar Iniciativa</button>
+      </div>
+
+      <!-- Filtros INICIATIVAS-->
+      <div class="row mb-3">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+        <input type="hidden" name="main_tab" value="{{ main_tab }}">
+        <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+        <div class="form-group">
+          <label class="form-label mb-0">Iniciativa</label>
+          <input name="numero_documento" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.numero_documento }}" placeholder="Ex: 101500711">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Definição do projeto</label>
+          <input name="definicao_projeto" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.definicao_projeto }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Elemento PEP</label>
+          <input name="elemento_pep" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.elemento_pep }}" placeholder="Ex: 04P24047_AF_001">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+          <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+        </div>
+        </form>
+      </div>
+
+      <!-- Banner nome Tabela INICIATIVA -->
+      <div class="text-center py-1 mb-1"
+         style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+            line-height: 1.1; border-radius: 0.5rem;">
+        INICIATIVAS
+      </div>
+      <!-- Linhas com valores e cálculos das INICIATIVAS -->
+      <div class="d-flex justify-content-center gap-2 my-1">
+
+        <!-- Grupo Geral -->
+        <div class="d-flex flex-column gap-1">
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Total de Iniciativas:</span>
+              <strong>{{ total_iniciativas }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Valor Total:</span>
+              <strong>{{ valor_total_liq_iniciativas | moeda_brasileira }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grupo Ativas -->
+        <div class="d-flex flex-column gap-1">
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Total de Iniciativas (Ativas):</span>
+              <strong class="text-success">{{ total_abertas }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Valor Total (Ativas):</span>
+              <strong class="text-success">{{ valor_total_ativas | moeda_brasileira }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grupo Fechadas -->
+        <div class="d-flex flex-column gap-1">
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Total de Iniciativas (Fechadas):</span>
+              <strong class="text-danger">{{ total_fechadas }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Valor Total (Fechadas):</span>
+              <strong class="text-danger">{{ valor_total_fechadas | moeda_brasileira }}</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TABELA INICIATIVAS -->
+      <div class="table-responsive" style="max-height:300px;overflow-y:auto;font-size:0.75rem;line-height:1.2;border:1px solid #ddd;padding:.5rem;">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              {% for h in headers_projetos %}
+                <th class="align-middle">{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows_projetos %}
+              <tr>
+                {% for cell in row %}
+                  <td class="text-center">
+                    {% if forloop.counter0 == 10 or forloop.counter0 == 11 or forloop.counter0 == 12 or forloop.counter0 == 13 %}
+                      {{ cell|moeda_brasileira }}
+                    {% else %}
+                      {{ cell }}
+                    {% endif %}
+                  </td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="{{ headers_projetos|length }}" class="text-center">Nenhum registro encontrado.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% elif sub_tab == 'rda_sem_pedido' %}
+      <!-- Botão Editar RDA -->
+      <div class="mb-3">
+        <button id="btn-editar-rda" class="btn btn-outline-primary btn-sm">Editar RDA</button>
+      </div>
+      <!-- Modal Editar RDA -->
+      <div class="modal fade" id="modalEditarRda" tabindex="-1" aria-labelledby="editarRdaLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="main_tab" value="{{ main_tab }}">
+          <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+          <input type="hidden" name="rda_pk" id="rda_pk">
+
+          <div class="modal-header">
+            <h5 class="modal-title" id="editarRdaLabel">Editar RDA</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+            <label for="sap_cofor" class="form-label">SAP/COFOR</label>
+            <input type="text" class="form-control form-control-sm" name="sap_cofor" id="sap_cofor">
+            </div>
+            <div class="mb-3">
+            <label for="nome_fornecedor" class="form-label">Nome Fornecedor</label>
+            <input type="text" class="form-control form-control-sm" name="nome_fornecedor" id="nome_fornecedor">
+            </div>
+            <div class="mb-3">
+            <label for="erro_rda" class="form-label">Erro na RDA</label>
+            <select class="form-select form-select-sm" name="erro_rda" id="erro_rda">
+              <option value="">Selecione</option>
+              <option value="Sim">Sim</option>
+              <option value="Não">Não</option>
+            </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success btn-sm">Salvar</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+          </form>
+        </div>
+        </div>
+      </div>
+      <!-- Modal Envio de E-mail -->
+      <div class="modal fade" id="modalEnvioEmail" tabindex="-1" aria-labelledby="envioEmailLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <form id="formEnvioEmail">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="envioEmailLabel">Envio de E-mail / Follow-up</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <!-- 1) Tabela de leitura com os dados da linha -->
+            <table class="table table-sm mb-4">
+            <tbody>
+              <tr><th>ID</th>             <td id="modalIniciativa"></td></tr>
+              <tr><th>RDA</th>            <td id="modalRda"></td></tr>
+              <tr><th>Valor Emissão</th>  <td id="modalValorEmissao"></td></tr>
+              <tr><th>Projeto</th>        <td id="modalProjeto"></td></tr>
+              <tr><th>PEP</th>            <td id="modalPep"></td></tr>
+              <tr><th>Data Emissão</th>   <td id="modalDataEmissao"></td></tr>
+              <tr><th>Planta</th>         <td id="modalPlanta"></td></tr>
+              <tr><th>Dias Corridos</th>  <td id="modalDiasCorridos"></td></tr>
+              <tr><th>Dias Úteis</th>     <td id="modalDiasUteis"></td></tr>
+              <tr><th>Data Envio DAF</th>  <td id="modalEnvioDaf"></td></tr>
+            </tbody>
+            </table>
+            <!-- 2) Campos extras que o usuário vai preencher -->
+            <div class="mb-3">
+            <label for="emailAssunto" class="form-label">Assunto</label>
+            <input type="text" id="emailAssunto" name="assunto" class="form-control form-control-sm">
+            </div>
+            <div class="mb-3">
+            <label for="emailCorpo" class="form-label">Corpo do E-mail</label>
+            <div id="emailCorpo" contenteditable="true" class="form-control form-control-sm" style="min-height:120px; white-space: nowrap; overflow-x:auto;"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-sm">Salvar e Enviar</button>
+          </div>
+          </form>
+        </div>
+        </div>
+      </div>
+      <!-- Filtros RDA NOVAS-->
+      <div class="row mb-3">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+        <input type="hidden" name="main_tab" value="{{ main_tab }}">
+        <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+        <div class="form-group">
+          <label class="form-label mb-0">Nº doc. de referência</label>
+          <input name="numero_documento" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.numero_documento }}" placeholder="Ex: 101500711">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Definição do projeto</label>
+          <input name="definicao_projeto" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.definicao_projeto }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Elemento PEP</label>
+          <input name="elemento_pep" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.elemento_pep }}" placeholder="Ex: 04P24047_AF_001">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Planta</label>
+          <input name="planta" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.planta }}" placeholder="Ex: G164 / G324 / G654">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+          <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+        </div>
+        </form>
+      </div>
+      <!-- Banner nome Tabela RDA's NOVAS -->
+      <div class="text-center py-1 mb-1"
+         style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+            line-height: 1.1; border-radius: 0.5rem;">
+        RDA's NOVAS
+      </div>
+      <!-- Linhas com valores e cálculos das RDA's NOVAS -->
+      <div class="d-flex justify-content-center gap-2 my-1">
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class=" fw-bold text-muted">Total:</span> <strong>{{ total_rda }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">No prazo:</span> <strong class="text-success">{{ no_prazo }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Fora do prazo compras:</span> <strong class="text-danger">{{ fora_prazo }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Atuação iniciativa:</span> <strong class="text-success">{{ atuacao_correta }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm {% if necessario_atuar > 0 %}bg-warning{% endif %}" style="width: 140px; height: auto;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Necessário atuar:</span>
+          <strong class="{% if necessario_atuar > 0 %}text-dark{% else %}text-danger{% endif %}">{{ necessario_atuar }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: 140px; height: auto;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">RDA c/ erro:</span> <strong class="text-danger">{{ rda_com_erro }}</strong>
+        </div>
+        </div>
+      </div>
+      <!-- Tabela RDA's NOVAS -->
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem; margin-bottom:1cm;">
+        <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+          {% for h in headers %}
+            <th class="align-middle">{{ h }}</th>
+          {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for obj in rda_list %}
+          <tr class="row-selectable {{ obj.row_color }}" data-id="{{ obj.pk }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{obj.status_summary}}">
+          <td class="text-center">{{ obj.pk }}</td>
+          <td class="text-center">{{ obj.definicao_do_projeto }}</td>
+          <td class="text-center">{{ obj.elemento_pep }}</td>                
+          <td class="text-center">{{ obj.nro_doc_referencia|remover_decimal }}</td>
+          <td class="text-center">{{ obj.sap_cofor }}</td>
+          <td class="text-left">{{ obj.nome_fornecedor }}</td>
+          <td class="text-center">{{ obj.total_valor_moeda_objeto|moeda_brasileira }}</td>
+          <td class="text-center">{{ obj.data_do_documento}}</td>
+          <td class="text-center">{{ obj.empresa }}</td>
+          <td class="text-center">{{ obj.dias_corridos }}</td>
+          <td class="text-center">{{ obj.dias_uteis }}</td>
+          <td class="text-center">{% if obj.erro_rda %}Sim{% elif obj.erro_rda == False %}Não{% else %}-{% endif %}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-link btn-email1" data-pk="{{ obj.pk }}" data-bs-toggle="modal" data-bs-target="#modalEnvioEmail">
+            {% if obj.has_email1 %}
+            <i class="bi bi-check-circle-fill text-success"></i>
+            {% else %}
+            <i class="bi bi-x-circle-fill text-muted"></i>
+            {% endif %}
+            </button>
+          </td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-link btn-email2" data-pk="{{ obj.pk }}" data-bs-toggle="modal" data-bs-target="#modalEnvioEmail">
+            {% if obj.has_email2 %}
+            <i class="bi bi-check-circle-fill text-success"></i>
+            {% else %}
+            <i class="bi bi-x-circle-fill text-danger"></i>
+            {% endif %}
+            </button>
+          </td>
+          <td style="min-width:100px;">
+            <div class="progress">
+            <div class="progress-bar"
+              role="progressbar"
+              data-prog="{{ obj.progress|default:'0' }}">
+              {{ obj.progress|default:'0' }}%
+            </div>
+            </div>
+          </td>
+          <td class="text-center">
+            <form method="post" action="{% url 'aprovar_rda' obj.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-success" title="RDA Aprovada">
+              <i class="bi bi-check-circle"></i>
+            </button>
+            </form>
+          </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="{{ headers|length }}">Nenhum registro encontrado.</td></tr>
+          {% endfor %}
+        </tbody>
+        </table>
+      </div>
+      <!-- Filtros RDA APROVADAS-->
+      <div class="row mb-3">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+        <input type="hidden" name="main_tab" value="{{ main_tab }}">
+        <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+        <div class="form-group">
+          <label class="form-label mb-0">RDA</label>
+          <input name="numero_documento_aprovada" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.numero_documento_aprovada }}" placeholder="Ex: 101500711">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Projeto</label>
+          <input name="definicao_projeto_aprovada" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.definicao_projeto_aprovada }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Elemento PEP</label>
+          <input name="elemento_pep_aprovada" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.elemento_pep_aprovada }}" placeholder="Ex: 04P24047_AF_001">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Planta</label>
+          <input name="planta" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.planta }}" placeholder="Ex: G164 / G324 / G654">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Mês/Ano Emissão RDA</label>
+          <input name="mes_ano_emissao_rda" class="form-control form-control-sm" type="month"
+            value="{{ request.GET.mes_ano_emissao_rda }}">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+          <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+        </div>
+        </form>
+      </div>
+
+      <!-- BANNER RDA's APROVADAS -->
+      <div class="text-center py-1 mb-1" style="background-color:#123c5c;color:white;font-weight:bold;font-size:1.0rem;
+        line-height:1.1;border-radius:0.5rem;">
+        RDA's APROVADAS
+      </div>
+
+      <!-- Linhas com valores e cálculos das RDA's APROVADAS -->
+      <div class="d-flex justify-content-center gap-2 my-1">
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class=" fw-bold text-muted">Total:</span> <strong>{{ total_rda_aprovada }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Aprovada no prazo:</span> <strong class="text-success">{{ no_prazo_aprovada }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Aprovada fora do prazo:</span> <strong class="text-danger">{{ fora_prazo_aprovada }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Percentual aprovada no prazo:</span> <strong class="text-danger">{{ perc_no_prazo_aprovada}}%</strong>
+        </div>
+        </div>
+                <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Média de dias úteis:</span>
+          <strong class="{% if media_dias_uteis > 5 %}text-danger{% else %}text-success{% endif %}">
+            {{ media_dias_uteis|stringformat:".1f" }}
+          </strong>
+        </div>
+        </div>
+                <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Mediana de dias úteis:</span>
+          <strong class="{% if mediana_dias_uteis > 5 %}text-danger{% else %}text-success{% endif %}">
+            {{ mediana_dias_uteis|stringformat:".1f" }}
+          </strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: 140px; height: auto;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">RDA c/ erro:</span> <strong class="text-danger">{{ rda_com_erro_aprovada }}</strong>
+        </div>
+        </div>
+      </div>
+
+      <!-- TABELA RDA's APROVADAS -->
+      <div class="table-responsive" style="max-height:300px;overflow-y:auto;font-size:0.75rem;line-height:1.2;border:1px solid #ddd;padding:.5rem;">
+        <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>{% for h in headers_aprovadas %}<th class="align-middle">{{ h }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in rows_aprovadas %}
+          <tr class="row-selectable" data-id="{{ row.0 }}">
+            {% for cell in row %}
+            <!-- Datas -->
+            {% if forloop.counter0 == 5 or forloop.counter0 == 7 or forloop.counter0 == 10 or forloop.counter0 == 18 %}
+              <td class="text-center text-nowrap">{{ cell|date:"d/m/Y" }}</td>
+            <!-- Valor -->
+            {% elif forloop.counter0 == 12 or forloop.counter0 == 13 %}
+              <td class="text-center text-nowrap">{{ cell|moeda_brasileira }}</td>
+            <!-- Erro RDA -->
+            {% elif forloop.counter0 == 24 %}
+              <td class="text-center text-nowrap">
+              {% if cell %}Sim{% else %}Não{% endif %}
+              </td>
+            <!-- Email 1 e 2 -->
+            {% elif forloop.counter0 == 25 or forloop.counter0 == 26 %}
+              <td class="text-center text-nowrap">
+              {% if cell %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+              {% else %}
+                <i class="bi bi-x-circle-fill text-danger"></i>
+              {% endif %}
+              </td>
+            {% elif forloop.counter0 == 44 %}
+              <!-- Progresso com barra visual -->
+              <td class="text-center text-nowrap">
+              <div class="progress" style="height: 15px;">
+                <div class="progress-bar"
+                  role="progressbar"
+                  aria-valuenow="{{ cell|floatformat:0 }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100">
+                {{ cell|floatformat:0 }}%
+                </div>
+              </div>
+              </td>
+            {% else %}
+              <!-- Demais colunas -->
+              <td class="text-center text-nowrap">{{ cell }}</td>
+            {% endif %}
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr><td colspan="{{ headers_aprovadas|length }}">Nenhum registro encontrado.</td></tr>
+          {% endfor %}
+        </tbody>
+        </table>
+      </div>
+      
+      <!-- ======================= PEDIDOS SECTION ======================= -->
+
+      {% elif sub_tab == 'pedidos' %}
+
+      <!-- FILTROS PEDIDOS PENDENTES -->
+      <div class="row mb-3">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+        <input type="hidden" name="main_tab" value="{{ main_tab }}">
+        <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+        <div class="form-group">
+          <label class="form-label mb-0">Nº doc. de referência</label>
+          <input name="numero_documento" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.numero_documento }}" placeholder="Ex: 101500711">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Definição do projeto</label>
+          <input name="definicao_projeto" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.definicao_projeto }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+        </div>
+        <div class="form-group">
+          <label class="form-label mb-0">Elemento PEP</label>
+          <input name="elemento_pep" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.elemento_pep }}" placeholder="Ex: 04P24047_AF_001">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+          <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+        </div>
+        </form>
+      </div>
+
+      <!-- BANNER PEDIDOS PENDENTES -->
+      <div class="text-center py-1 mb-1" style="background-color:#123c5c;color:white;font-weight:bold;font-size:1.0rem;
+        line-height:1.1;border-radius:0.5rem;">
+        PEDIDOS PENDENTES
+      </div>
+
+      <!-- Linhas com valores e cálculos dos PEDIDOS PENDENTES -->
+      <div class="d-flex justify-content-center gap-2 my-1">
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class=" fw-bold text-muted">Total:</span> <strong>{{ total_pedidos_pendestes }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Pagamento no prazo:</span> <strong class="text-success">{{ pedidos_pendentes_no_prazo }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Pagamento fora do prazo:</span> <strong class="text-danger">{{ pedidos_pendentes_fora_prazo }}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;"></div>
+        <div style="font-size: 0.75rem;"></div>
+          <span class="fw-bold text-muted">% Pago no prazo:</span> <strong class="text-danger">{{ perc_pedidos_pendentes_no_prazo}}</strong>
+        </div>
+        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: 140px; height: auto;">
+        <div style="font-size: 0.75rem;">
+          <span class="fw-bold text-muted">Pedido c/ erro:</span> <strong class="text-danger">{{ pedido_com_erro_pendente }}</strong>
+        </div>
+        </div>
+      </div>
+
+      <!-- TABELA PEDIDOS PENDENTES -->
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem; margin-bottom:1cm;">
+          <table class="table table-sm table-hover mb-4">
+            <thead class="table-light">
+              <tr>
+                {% for h in headers_pendentes %}
+                  <th class="align-middle text-nowrap">{{ h }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows_pendentes %}
+                <tr>
+                  {% for cell in row %}
+                    {% if forloop.counter0 == 1 %}
+                      <td class="text-center">{{ cell|remover_decimal }}</td>
+                    {% elif forloop.counter0 == 4 %}
+                      <td class="text-center">{{ cell|data_por_extenso }}</td>
+                    {% elif forloop.counter0 == 7 %}
+                      <td class="text-center">{{ cell|moeda_brasileira }}</td>
+                    {% else %}
+                      <td class="text-center text-nowrap">{{ cell }}</td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% empty %}
+                <tr><td colspan="{{ headers_pendentes|length }}">Nenhum registro encontrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- FILTROS PEDIDOS ADIANTADOS -->
+        <div class="row mb-3">
+          <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+            <input type="hidden" name="main_tab" value="{{ main_tab }}">
+            <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+            <div class="form-group">
+              <label class="form-label mb-0">Nº doc. de referência</label>
+              <input name="numero_documento" class="form-control form-control-sm" type="text"
+                     value="{{ request.GET.numero_documento }}" placeholder="Ex: 101500711">
+            </div>
+            <div class="form-group">
+              <label class="form-label mb-0">Definição do projeto</label>
+              <input name="definicao_projeto" class="form-control form-control-sm" type="text"
+                     value="{{ request.GET.definicao_projeto }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+            </div>
+            <div class="form-group">
+              <label class="form-label mb-0">Elemento PEP</label>
+              <input name="elemento_pep" class="form-control form-control-sm" type="text"
+                     value="{{ request.GET.elemento_pep }}" placeholder="Ex: 04P24047_AF_001">
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+              <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- === BANNER PEDIDOS ADIANTADOS === -->
+        <div class="text-center py-1 mb-1"
+             style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+                    line-height: 1.1; border-radius: 0.5rem;">
+          PEDIDOS ADIANTADOS
+        </div>
+
+        <!-- TABELA PEDIDOS ADIANTADOS -->
+        <div class="table-responsive" 
+              style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem; margin-bottom:1cm;">
+          <table class="table table-sm table-hover mb-4">
+            <thead class="table-light">
+              <tr>
+                {% for h in headers_adiantados %}
+                  <th class="align-middle text-nowrap">{{ h }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows_adiantados %}
+                <tr>
+                  {% for cell in row %}
+                    <td class="text-center text-nowrap">{{ cell }}</td>
+                  {% endfor %}
+                </tr>
+              {% empty %}
+                <tr><td colspan="{{ headers_adiantados|length }}">Nenhum registro encontrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- FILTROS PEDIDOS PAGOS -->
+        <div class="row mb-3">
+          <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+            <input type="hidden" name="main_tab" value="{{ main_tab }}">
+            <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+            <div class="form-group">
+              <label class="form-label mb-0">Nº doc. de referência</label>
+              <input name="numero_documento" class="form-control form-control-sm" type="text"
+                     value="{{ request.GET.numero_documento }}" placeholder="Ex: 101500711">
+            </div>
+            <div class="form-group">
+              <label class="form-label mb-0">Definição do projeto</label>
+              <input name="definicao_projeto" class="form-control form-control-sm" type="text"
+                     value="{{ request.GET.definicao_projeto }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+            </div>
+            <div class="form-group">
+              <label class="form-label mb-0">Elemento PEP</label>
+              <input name="elemento_pep" class="form-control form-control-sm" type="text"
+                     value="{{ request.GET.elemento_pep }}" placeholder="Ex: 04P24047_AF_001">
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+              <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- === BANNER PEDIDOS PAGOS === -->
+        <div class="text-center py-1 mb-1"
+             style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+                    line-height: 1.1; border-radius: 0.5rem;">
+          PEDIDOS PAGOS
+        </div>
+        <div class="table-responsive" style="max-height:300px; overflow-y:auto;
+                                             font-size:0.75rem; line-height:1.2;
+                                             border:1px solid #ddd; padding:.5rem;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                {% for h in headers_pagos %}
+                  <th class="align-middle text-nowrap">{{ h }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows_pagos %}
+                <tr>
+                  {% for cell in row %}
+                    <td class="text-center text-nowrap">{{ cell }}</td>
+                  {% endfor %}
+                </tr>
+              {% empty %}
+                <tr><td colspan="{{ headers_pagos|length }}">Nenhum registro encontrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      {% else %}
+
+        <div class="table-responsive" style="max-height:300px; overflow-y:auto;
+                                             font-size:0.75rem; line-height:1.2;
+                                             border:1px solid #ddd; padding:.5rem;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                {% for h in headers %}
+                  <th class="align-middle text-nowrap">{{ h }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+                {% with row_class=row|last %}
+                  <tr class="row-selectable {% if row_class == 'old' %}table-danger{% endif %}"
+                      data-id="{{ row.0 }}">
+                    {% for cell in row|slice:":-1" %}
+                      {% if forloop.counter0 == 2 %}
+                        <td class="text-center">{{ cell|moeda_brasileira }}</td>
+                      {% elif forloop.counter0 == 1 %}
+                        <td class="text-center">{{ cell|remover_decimal }}</td>
+                      {% else %}
+                        <td class="text-center">{{ cell }}</td>
+                      {% endif %}
+                    {% endfor %}
+                  </tr>
+                {% endwith %}
+              {% empty %}
+                <tr><td colspan="{{ headers|length }}">Nenhum registro encontrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center my-4">
+          <a href="{% url 'dashboard_iniciativas' %}?sub_tab={{ sub_tab }}"
+             class="btn btn-primary btn-lg px-5">Ver Dashboards</a>
+        </div>
+      
+      {% endif %}
+    {% endif %}
+
+    <!-- ======================= Pleitos Section ======================= -->
+    {% if sub_tab|lower == 'pleitos' %}
+      <!-- Pleitos Actions -->
+      <div class="mb-3">
+        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNovoPleito">Inserir Pleito Novo</button>
+        <button id="btn-editar-pleito" class="btn btn-outline-primary btn-sm">Editar Pleito</button>
+      </div>
+      <!-- Pleitos Modal -->
+      <div class="modal fade" id="modalNovoPleito" tabindex="-1" aria-labelledby="novoPleitoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <form id="update-form" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="main_tab" value="{{ main_tab }}">
+              <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+              <div class="modal-header">
+                <h5 class="modal-title" id="novoPleitoLabel">Cadastro / Edição de Pleito</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="selected_id_pleito" class="form-label">ID Pleito:</label>
+                    <input id="selected_id_pleito" name="selected_id_pleito" class="form-control form-control-sm" type="text">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="id_iniciativa" class="form-label">ID Iniciativa:</label>
+                    <input id="id_iniciativa" name="id_iniciativa" class="form-control form-control-sm" type="text">
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="cid_enviado" class="form-label">CID Enviado:</label>
+                    <select id="cid_enviado" name="cid_enviado" class="form-select form-select-sm">
+                      <option value="">Selecione</option>
+                      <option value="Sim">Sim</option>
+                      <option value="Não">Não</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="analista_upd" class="form-label">Analista:</label>
+                    <select id="analista_upd" name="analista" class="form-select form-select-sm">
+                      <option value="">Selecione</option>
+                      {% for a in analistas %}
+                        <option value="{{ a }}"{% if a == analista %} selected{% endif %}>{{ a }}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Campo obrigatório.</div>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="responsabilidade_upd" class="form-label">Responsabilidade:</label>
+                    <select id="responsabilidade_upd" name="responsabilidade" class="form-select form-select-sm">
+                      <option value="">Selecione</option>
+                      {% for r in responsabilidades %}
+                        <option value="{{ r }}">{{ r }}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Campo obrigatório.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success btn-sm">Salvar</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- Pleitos Filters -->
+      <div class="row mb-3">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+          <input type="hidden" name="main_tab" value="{{ main_tab }}">
+          <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+          <div class="form-group">
+            <label for="filter_planta" class="form-label mb-0">Planta</label>
+            <input id="filter_planta" name="planta" class="form-control form-control-sm" type="text" value="{{ planta }}" placeholder="Planta">
+          </div>
+          <div class="form-group">
+            <label for="filter_id_iniciativa" class="form-label mb-0">ID Iniciativa</label>
+            <input id="filter_id_iniciativa" name="id_iniciativa" class="form-control form-control-sm" type="text" value="{{ id_iniciativa }}" placeholder="ID Iniciativa">
+          </div>
+          <div class="form-group">
+            <label for="filter_analista" class="form-label mb-0">Analista Responsável</label>
+            <select id="filter_analista" name="analista" class="form-select form-select-sm">
+              <option value="">Todos</option>
+              {% for a in analistas %}
+                <option value="{{ a }}"{% if a == analista %} selected{% endif %}>{{ a }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+            <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabela ORM de Pleitos -->
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.65rem; line-height:1.2; border:1px solid #ddd; padding:.5rem;">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr class="row-selectable">{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% empty %}
+              <tr><td colspan="{{ headers|length }}">Nenhum pleito encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-center my-4">
+        <a href="{% url 'pleitos_dash' %}" class="btn btn-primary btn-lg px-5">Ver Dashboards</a>
+      </div>
+    {% endif %}
+
+    <!-- ======================= Projetos Section ======================= -->
+    {% if sub_tab|lower == 'projetos' %}
+      <!-- Projetos Actions -->
+      <div class="mb-3">
+        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNovoProjeto">Novo Projeto</button>
+        <button id="btn-editar-projeto" class="btn btn-outline-primary btn-sm">Editar Projeto</button>
+      </div>
+      <!-- Projetos Modal -->
+      <div class="modal fade" id="modalNovoProjeto" tabindex="-1" aria-labelledby="novoProjetoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form id="form-projeto" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="main_tab" value="{{ main_tab }}">
+              <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+              <div class="modal-header">
+                <h5 class="modal-title" id="novoProjetoLabel">Cadastro / Edição de Projeto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="id_gerador" class="form-label">ID Gerador:</label>
+                  <input id="id_gerador" name="id_gerador" class="form-control form-control-sm" type="text">
+                </div>
+                <div class="mb-3">
+                  <label for="planta" class="form-label">Planta:</label>
+                  <input id="planta" name="planta" class="form-control form-control-sm" type="text">
+                </div>
+                <div class="mb-3">
+                  <label for="analista_projeto" class="form-label">Analista:</label>
+                  <select id="analista_projeto" name="analista" class="form-select form-select-sm">
+                    <option value="">Selecione</option>
+                    {% for a in analistas %}
+                      <option value="{{ a }}"{% if a == analista %} selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success btn-sm">Salvar</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- Projetos Filters -->
+      <div class="row mb-3">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+          <input type="hidden" name="main_tab" value="{{ main_tab }}">
+          <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+          <div class="form-group">
+            <label for="filter_planta_proj" class="form-label mb-0">Planta</label>
+            <input id="filter_planta_proj" name="planta" class="form-control form-control-sm" type="text" value="{{ planta }}" placeholder="Planta">
+          </div>
+          <div class="form-group">
+            <label for="filter_id_gerador" class="form-label mb-0">ID Gerador</label>
+            <input id="filter_id_gerador" name="id_gerador" class="form-control form-control-sm" type="text" value="{{ id_gerador }}" placeholder="ID Gerador">
+          </div>
+          <div class="form-group">
+            <label for="filter_analista_proj" class="form-label mb-0">Analista</label>
+            <select id="filter_analista_proj" name="analista" class="form-select form-select-sm">
+              <option value="">Todos</option>
+              {% for a in analistas %}
+                <option value="{{ a }}"{% if a == analista %} selected{% endif %}>{{ a }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+            <a href="?main_tab={{ main_tab }}&sub_tab={{ sub_tab }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabela ORM de Projetos -->
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.65rem; line-height:1.2; border:1px solid #ddd; padding:.5rem;">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr class="row-selectable">{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% empty %}
+              <tr><td colspan="{{ headers|length }}">Nenhum projeto encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-center mt-4">
+        <a href="{% url 'dashboard_projetos' %}" class="btn btn-outline-primary btn-lg">Ver Dashboards</a>
+      </div>
+    {% endif %}
+    <!-- ======================= Surveys / Data Display ======================= -->
+    <div class="row mb-3">
+      <div class="col-md-3">Tabela</div>
+      <div class="col-12">
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% elif main_tab == 'Survey' and sub_tab == 'Dash' %}
+        <!-- Survey Dashboard -->
+        <div class="card mb-4 text-center">
+        <div class="card-body">
+          <h5>Total de Surveys</h5>
+          <p class="display-4">{{ n_surveys }}</p>
+        </div>
+        </div>
+        <canvas id="chartResponseRate" height="100"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+        const labels = JSON.parse('{{ survey_codes_json|escapejs }}');
+        const data   = JSON.parse('{{ response_rates_json|escapejs }}');
+        new Chart(document.getElementById('chartResponseRate').getContext('2d'), {
+          type: 'bar',
+          data: { labels: labels, datasets: [{ label: '% Resposta', data: data, borderWidth:1 }] },
+          options: { scales:{ y:{ beginAtZero:true, max:100 } }}
+        });
+        </script>
+      {% elif df_html %}
+        <!-- Data Table -->
+        <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.65rem; line-height:1.2; border:1px solid #ddd; padding:.5rem;">
+        {{ df_html|safe }}
+        </div>
+      {% endif %}
+      </div>
+    </div>
+    <style>
+      tr.table-active {
+      background-color: #9fc4fc !important;
+      }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const table = document.querySelector('table.table');
+      const form  = document.getElementById('update-form');
+      if (form) form.reset();
+      if (!table) return;
+
+      // Destaca linha selecionada com fundo azul claro
+      table.querySelectorAll('tbody tr').forEach(row =>
+        row.addEventListener('click', () => {
+          table.querySelectorAll('tbody tr').forEach(r => r.classList.remove('table-active'));
+          row.classList.add('table-active');
+        })
+      );
+
+      // Editar Provisão de Gasto
+      const btnEditarProvisao = document.getElementById('btn-editar-provisao');
+      if (btnEditarProvisao) {
+        btnEditarProvisao.addEventListener('click', () => {
+          // Procura a tabela correta (NOVA PROVISAO)
+          const table = document.querySelector('.table-responsive table');
+          const sel = table.querySelector('tbody tr.table-active');
+          if (!sel) return alert('Selecione uma linha da tabela NOVA PROVISÃO antes de editar.');
+
+          const cells = sel.querySelectorAll('td');
+
+          // Pega o PK para edição (do atributo data-id do <tr>)
+          document.getElementById('provisao_pk').value      = sel.getAttribute('data-id') || '';
+
+          // Agora pula o primeiro <td> (ID), e preenche os campos a partir do 1 (ID do Projeto)
+          document.getElementById('id_id_projeto').value    = cells[1].innerText.trim();
+          document.getElementById('id_projeto').value       = cells[2].innerText.trim();
+          document.getElementById('id_iniciativa').value    = cells[3].innerText.trim();
+          document.getElementById('id_descricao').value     = cells[4].innerText.trim();
+          // Remove R$ e pontos, troca vírgula por ponto para valor decimal
+          document.getElementById('id_provisao').value      = cells[5].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+
+          // Abre o modal já preenchido
+          new bootstrap.Modal(document.getElementById('modalNovaPropensao')).show();
+        });
+      }
+
+      // Editar RDA
+      const btnEditarRda = document.getElementById('btn-editar-rda');
+      if (btnEditarRda) {
+        btnEditarRda.addEventListener('click', () => {
+          const sel = document.querySelector('tbody tr.table-active');
+          if (!sel) return alert('Selecione uma linha antes de editar.');
+
+          // Captura diretamente o data-id (pk) da linha selecionada
+          const pk = sel.getAttribute('data-id');
+          document.getElementById('rda_pk').value = pk;
+
+          // Continua buscando valores para sap_cofor e nome_fornecedor
+          const headers = Array.from(document.querySelectorAll('thead th')).map(h =>
+            h.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
+          );
+          const cells = sel.querySelectorAll('td');
+          const idx = {
+            sap: headers.indexOf('sap/cofor'),
+            nome: headers.indexOf('nome fornecedor'),
+          };
+          document.getElementById('sap_cofor').value = cells[idx.sap]?.innerText.trim() || '';
+          document.getElementById('nome_fornecedor').value = cells[idx.nome]?.innerText.trim() || '';
+
+          new bootstrap.Modal(document.getElementById('modalEditarRda')).show();
+        });
+      }
+
+      // Editar Projeto
+      const btnEditarProj = document.getElementById('btn-editar-projeto');
+      if (btnEditarProj) {
+        btnEditarProj.addEventListener('click', () => {
+          const sel = document.querySelector('tbody tr.table-active');
+          if (!sel) return alert('Selecione uma linha antes de editar.');
+          const headers = Array.from(document.querySelectorAll('thead th')).map(h =>
+            h.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
+          );
+          const idx = {
+            ger: headers.indexOf('id gerador'),
+            planta: headers.indexOf('planta'),
+            anal: headers.indexOf('analista')
+          };
+          document.getElementById('id_gerador').value       = sel.cells[idx.ger]?.innerText.trim() || '';
+          document.getElementById('planta').value           = sel.cells[idx.planta]?.innerText.trim() || '';
+          document.getElementById('analista_projeto').value = sel.cells[idx.anal]?.innerText.trim() || '';
+          new bootstrap.Modal(document.getElementById('modalNovoProjeto')).show();
+        });
+      }
+
+      // Editar Pleito
+      const btnEditar = document.getElementById('btn-editar-pleito');
+      if (btnEditar) {
+        const modalPleito = new bootstrap.Modal(document.getElementById('modalNovoPleito'));
+        btnEditar.addEventListener('click', () => {
+          const sel = document.querySelector('tbody tr.table-active');
+          if (!sel) return alert('Selecione uma linha antes de editar.');
+          const headers = Array.from(table.querySelectorAll('thead th')).map(h => h.innerText.trim().toLowerCase());
+          const idx = {
+            id: headers.indexOf('id pleito'),
+            init: headers.indexOf('id iniciativa'),
+            cid: headers.indexOf('cid enviado'),
+            analista: headers.indexOf('analista responsável'),
+            resp: headers.indexOf('responsabilidade')
+          };
+          document.getElementById('selected_id_pleito').value           = sel.cells[idx.id]?.innerText.trim() || '';
+          document.getElementById('id_iniciativa').value                = sel.cells[idx.init]?.innerText.trim() || '';
+          document.getElementById('cid_enviado').value                  = sel.cells[idx.cid]?.innerText.trim() || '';
+          document.getElementById('analista_upd').value                 = sel.cells[idx.analista]?.innerText.trim() || '';
+          document.getElementById('responsabilidade_upd').value         = sel.cells[idx.resp]?.innerText.trim() || '';
+          modalPleito.show();
+        });
+      }
+
+      // ─── Novo: Preencher e controlar modal de envio de e-mail ─────────────────────
+      const emailModalEl = document.getElementById('modalEnvioEmail');
+      if (emailModalEl) {
+        emailModalEl.addEventListener('show.bs.modal', event => {
+          const btn = event.relatedTarget;
+          const tr  = btn.closest('tr');
+          const cells = tr.querySelectorAll('td');
+          // popula a tabela interna do modal
+          document.getElementById('modalIniciativa'   ).innerText = cells[0]?.innerText.trim() || '';
+          document.getElementById('modalProjeto'      ).innerText = cells[1]?.innerText.trim() || '';
+          document.getElementById('modalPep'          ).innerText = cells[2]?.innerText.trim() || '';          
+          document.getElementById('modalRda'          ).innerText = cells[3]?.innerText.trim() || '';
+          document.getElementById('modalValorEmissao' ).innerText = cells[4]?.innerText.trim() || '';
+          document.getElementById('modalDataEmissao'  ).innerText = cells[5]?.innerText.trim() || '';
+          document.getElementById('modalPlanta'       ).innerText = cells[6]?.innerText.trim() || '';
+          document.getElementById('modalDiasCorridos' ).innerText = cells[7]?.innerText.trim() || '';
+          document.getElementById('modalDiasUteis'    ).innerText = cells[8]?.innerText.trim() || '';
+          document.getElementById('modalEnvioDaf'     ).innerText = cells[9]?.innerText.trim() || '';
+
+          // monta dinamicamente o HTML da tabela
+          const ths = Array.from(document.querySelectorAll('table.table thead th'))
+                            .map(th => th.innerText.trim());
+          const tds = Array.from(cells).map(td => td.innerText.trim());
+          let tableHTML = '<table style="border-collapse:collapse;width:100%;">';
+          // cabeçalho
+          tableHTML += '<tr>';
+          ths.forEach((h,i) => {
+            if (i < tds.length) {
+              tableHTML += `<th style="border:1px solid #ccc;padding:4px;background:#eee;">${h}</th>`;
+            }
+          });
+          tableHTML += '</tr>';
+          // linha de valores
+          tableHTML += '<tr>';
+          tds.forEach(v => {
+            tableHTML += `<td style="border:1px solid #ccc;padding:4px;">${v}</td>`;
+          });
+          tableHTML += '</tr>';
+          tableHTML += '</table>';
+
+          // insere no div editável
+          document.getElementById('emailCorpo').innerHTML = tableHTML;
+
+          // guarda pk e tipo para o submit
+          const formEmail = emailModalEl.querySelector('#formEnvioEmail');
+          formEmail.dataset.pk   = btn.dataset.pk;
+          formEmail.dataset.tipo = btn.classList.contains('btn-email1') ? 'email1' : 'email2';
+        });
+      }
+
+      // Handler do submit do formulário de envio de e-mail
+      const emailForm = document.getElementById('formEnvioEmail');
+      if (emailForm) {
+        emailForm.addEventListener('submit', ev => {
+          ev.preventDefault();
+          const pk   = emailForm.dataset.pk;
+          const tipo = emailForm.dataset.tipo;
+          const data = new URLSearchParams(new FormData(emailForm));
+          data.append('tipo', tipo);
+
+          fetch(`/rda/${pk}/registrar-email/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: data
+          })
+          .then(r => r.json())
+          .then(resp => {
+            if (!resp.success) throw new Error('Falha no registro');
+            // fecha o modal
+            bootstrap.Modal.getInstance(emailModalEl).hide();
+            // atualiza o ícone e tooltip na linha
+            const row = document.querySelector(`tr[data-id="${pk}"]`);
+            const btnSel = row.querySelector(`.btn-${tipo}`);
+            const icon = btnSel.querySelector('i');
+            icon.classList.remove('text-muted','text-danger');
+            icon.classList.add('text-success');
+            icon.title = `Enviado em ${new Date(resp.enviado_em).toLocaleString()} por ${resp.user}`;
+            // atualiza progresso
+            const pb = row.querySelector('.progress-bar');
+            pb.style.width   = resp.progress + '%';
+            pb.textContent   = resp.progress + '%';
+          })
+          .catch(console.error);
+        });
+      }
+
+      // Ajusta largura inicial da barra de progresso
+      document.querySelectorAll('.progress-bar').forEach(bar => {
+        const v = bar.dataset.prog || '0';
+        bar.style.width = `${v}%`;
+      });
+      // ─── Inicializa todos os tooltips do Bootstrap ───
+      const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      );
+      tooltipTriggerList.forEach(el =>
+        new bootstrap.Tooltip(el)
+      );
+    });
+  </script>
+{% endblock %}

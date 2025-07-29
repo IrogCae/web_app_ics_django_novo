@@ -1,0 +1,223 @@
+{% load static %} <!-- Carrega a tag 'static' do Django para uso de arquivos estáticos -->
+<!DOCTYPE html>
+<html lang="pt-br"> <!-- Idioma em português-->
+<head>
+  <meta charset="UTF-8"> <!-- Define a codificação de caracteres como UTF-8 -->
+  <title>Dashboard Pleitos</title> <!-- Título da página exibido na aba do navegador -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"> <!-- Importa o CSS do Bootstrap para estilização -->
+  <link rel="stylesheet" href="{% static 'ics_app/css/style.css' %}"> <!-- Importa o CSS customizado do projeto -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Importa a biblioteca Chart.js para gráficos -->
+</head>
+<body class="container-fluid p-4 stellantis-dark"> <!-- Define classes Bootstrap e customizadas para o body -->
+
+  <a href="{% url 'home' %}?main_tab=Projetos&sub_tab=Pleitos" class="btn btn-back-light btn-sm mb-4">← Voltar para Pleitos</a> <!-- Botão de voltar para a página de Pleitos -->
+
+  <h2 class="mb-4">Dashboard – Pleitos</h2> <!-- Título principal da dashboard -->
+
+  <div class="row text-center mb-5"> <!-- Linha de cards de indicadores principais -->
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Total Surveys</h6> <!-- Título do indicador -->
+        <h2 class="fw-bold">{{ total_surveys }}</h2> <!-- Valor do indicador vindo do backend -->
+    </div>
+  </div>
+    <div class="col-md-2 mb-3"> 
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Total de Pleitos</h6>
+        <h2 class="fw-bold">{{ total_pleitos }}</h2>
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Pleito Inicial (R$)</h6>
+        <h2 id="total-inicial" class="fw-bold">{{ total_inicial }}</h2> <!-- Valor inicial dos pleitos, será formatado via JS -->
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Pleito Valor Final (R$)</h6>
+        <h2 id="total-validado" class="fw-bold">{{ total_validado }}</h2> <!-- Valor final dos pleitos, será formatado via JS -->
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Valor de Redução (R$)</h6>
+        <h2 id="total-reducao" class="fw-bold">{{ total_reducao }}</h2> <!-- Valor de redução, será formatado via JS -->
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Em Análise (Qtd)</h6>
+        <h2 class="fw-bold">{{ em_analise_qtd }}</h2>
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Em Análise (R$)</h6>
+        <h2 id="analise-valor" class="fw-bold">{{ em_analise_valor }}</h2> <!-- Valor em análise, será formatado via JS -->
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Pleitos Aprovados</h6>
+        <h2 class="fw-bold">{{ pleitos_aprovados }}</h2>
+    </div>
+  </div>
+    <div class="col-md-2 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Média Dias de Análise</h6>
+        <h2 class="fw-bold">{{ media_dias }}</h2>
+    </div>
+  </div>
+</div>
+
+  <div class="row mb-5">
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Pleitos Recebidos por Mês</h6>
+        <canvas id="chartPleitosMes" height="100"></canvas> <!-- Gráfico de pleitos por mês -->
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Valores de Pleitos por Mês (R$)</h6>
+        <canvas id="chartValoresMes" height="100"></canvas> <!-- Gráfico de valores por mês -->
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Fornecedores vs Pleitos</h6>
+        <canvas id="chartFornecedores" height="100"></canvas> <!-- Gráfico de fornecedores x pleitos -->
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Status Pleito por Fornecedor</h6>
+        <canvas id="chartStatusFornecedor" height="100"></canvas> <!-- Gráfico de status por fornecedor -->
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Origem do Pleito</h6>
+        <canvas id="chartOrigem" height="200"></canvas> <!-- Gráfico de origem dos pleitos -->
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Classificação de Triagem</h6>
+        <canvas id="chartTriagem" height="200"></canvas> <!-- Gráfico de classificação de triagem -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+function formatarValor(valor) { // Função para formatar valores monetários para o padrão brasileiro e abreviar milhões/bilhões
+  const num = parseFloat(valor.toString().replace(/\./g, '').replace(',', '.')); // corrige vírgula
+  if (isNaN(num)) return valor;
+
+  if (num >= 1_000_000_000) {
+    return 'R$ ' + (num / 1_000_000_000).toFixed(2).replace('.', ',') + ' Bi';
+  } else if (num >= 1_000_000) {
+    return 'R$ ' + (num / 1_000_000).toFixed(1).replace('.', ',') + ' Mi';
+  } else {
+    return 'R$ ' + num.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+  }
+}
+
+  // Formatar os valores na DOM
+  window.addEventListener('DOMContentLoaded', () => { // Espera o carregamento do DOM para formatar os valores
+    const campos = [
+      ["{{ total_inicial }}", "total-inicial"],
+      ["{{ total_validado }}", "total-validado"],
+      ["{{ total_reducao }}", "total-reducao"],
+      ["{{ em_analise_valor }}", "analise-valor"]
+    ];
+
+    campos.forEach(([valor, id]) => { // Para cada campo, formata e atualiza o texto do elemento correspondente
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatarValor(valor);
+    });
+  });
+  </script>
+
+  <script>
+    const pleitosMes = JSON.parse('{{ pleitos_mes|escapejs }}'); // Dados de pleitos por mês vindos do backend
+    const valoresMes = JSON.parse('{{ valores_mes|escapejs }}'); // Dados de valores por mês vindos do backend
+    const fornecedores = JSON.parse('{{ fornecedores_pleitos|escapejs }}'); // Dados de fornecedores e pleitos
+    const statusFornecedor = JSON.parse('{{ status_fornecedor|escapejs }}'); // Dados de status por fornecedor
+    const origemPleito = JSON.parse('{{ origem_pleito|escapejs }}'); // Dados de origem dos pleitos
+    const triagem = JSON.parse('{{ triagem|escapejs }}'); // Dados de classificação de triagem
+
+    new Chart(document.getElementById('chartPleitosMes'), { // Cria gráfico de linha para pleitos por mês
+      type: 'line',
+      data: {
+        labels: Object.keys(pleitosMes),
+        datasets: [{ label: 'Pleitos', data: Object.values(pleitosMes), fill: false, borderColor: '#007bff' }]
+      }
+    });
+
+    new Chart(document.getElementById('chartValoresMes'), { // Cria gráfico de linha para valores por mês
+      type: 'line',
+      data: {
+        labels: Object.keys(valoresMes),
+        datasets: [{ label: 'Valor (R$)', data: Object.values(valoresMes), fill: false, borderColor: '#28a745' }]
+      }
+    });
+
+    const fLabels = Object.keys(fornecedores); // Extrai nomes dos fornecedores
+    const fPleitos = fLabels.map(k => fornecedores[k]['PLEITO VALIDADO']); // Extrai valores de pleitos validados por fornecedor
+    const fAvoid = fLabels.map(k => fornecedores[k]['COST AVOIDANCE']); // Extrai valores de cost avoidance por fornecedor
+    new Chart(document.getElementById('chartFornecedores'), { // Cria gráfico de barras horizontal para fornecedores
+      type: 'bar',
+      data: {
+        labels: fLabels,
+        datasets: [
+          { label: 'PLEITO VALIDADO', data: fPleitos, backgroundColor: '#007bff' },
+          { label: 'COST AVOIDANCE', data: fAvoid, backgroundColor: '#17a2b8' }
+        ]
+      },
+      options: { indexAxis: 'y' }
+    });
+
+    const sLabels = Object.keys(statusFornecedor); // Extrai nomes dos fornecedores para status
+    const statusTypes = [...new Set(Object.values(statusFornecedor).flatMap(v => Object.keys(v)))]; // Extrai todos os tipos de status únicos
+    const datasetsStatus = statusTypes.map(status => ({ // Monta datasets para cada status
+      label: status,
+      data: sLabels.map(f => statusFornecedor[f]?.[status] || 0),
+      stack: 'status'
+    }));
+    new Chart(document.getElementById('chartStatusFornecedor'), { // Cria gráfico de barras empilhadas para status por fornecedor
+      type: 'bar',
+      data: { labels: sLabels, datasets: datasetsStatus },
+      options: { indexAxis: 'y', responsive: true }
+    });
+
+    new Chart(document.getElementById('chartOrigem'), { // Cria gráfico de pizza para origem dos pleitos
+      type: 'pie',
+      data: {
+        labels: Object.keys(origemPleito),
+        datasets: [{ data: Object.values(origemPleito), backgroundColor: ['#007bff', '#6c757d', '#28a745', '#ffc107', '#dc3545'] }]
+      }
+    });
+
+    new Chart(document.getElementById('chartTriagem'), { // Cria gráfico de pizza para classificação de triagem
+      type: 'pie',
+      data: {
+        labels: Object.keys(triagem),
+        datasets: [{ data: Object.values(triagem), backgroundColor: ['#6610f2', '#20c997', '#fd7e14', '#e83e8c', '#17a2b8'] }]
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Importa novamente Chart.js (pode ser redundante) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> <!-- Importa plugin para exibir labels nos gráficos -->
+  <script src="{% static 'ics_app/js/chart_config.js' %}"></script> <!-- Importa configurações customizadas para os gráficos -->
+
+</body>
+</html>

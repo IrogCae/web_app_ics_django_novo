@@ -1,0 +1,53 @@
+.table thead th {
+  text-align: center !important;
+  background-color: #0f375b !important;
+  color: white;
+}
+
+.table-active {
+  background-color: #e9ecef;
+}
+
+.is-invalid {
+  border-color: #dc3545;
+}
+
+.table-responsive {
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+}
+
+/* Linha da tabela selecionada (ativa) */
+.table tbody tr.table-active {
+  background-color: #123c5c !important; /* variação mais escura de #0f375b */
+  color: white !important;
+}
+
+.table tbody tr.table-active td {
+  color: white !important;
+}
+
+/* Garante que o container continue rolando normalmente */
+.table-responsive {
+  max-height: 300px;
+  overflow-y: auto;
+  position: relative; /* necessário para o sticky funcionar */
+}
+
+/* Torna os <th> “grudados” no topo do .table-responsive */
+.table-responsive thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;              /* acima das linhas */
+  background-color: inherit; /* ou a cor que seu thead já usa */
+}
+
+.progress-bar {
+  transition: width 0.3s;
+  /* largura inicial 0% */
+  width: 0;
+}

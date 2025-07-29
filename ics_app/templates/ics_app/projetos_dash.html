@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Projetos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{% static 'ics_app/css/style.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="container-fluid p-4 stellantis-dark">
+
+  <a href="{% url 'home' %}?main_tab=Projetos&sub_tab=Projetos" class="btn btn-outline-primary btn-sm mb-4">← Voltar para Projetos</a>
+
+  <h2 class="mb-4">Dashboard – Projetos</h2>
+
+  <!-- Filtros (GET) -->
+  <form class="row g-3 mb-4" method="get" action="">
+    <input type="hidden" name="main_tab" value="Projetos">
+    <input type="hidden" name="sub_tab" value="Projetos">
+    <div class="col-md-3">
+      <input type="text" class="form-control" name="id_gerador" placeholder="ID Gerador" value="{{ id_gerador }}">
+    </div>
+    <div class="col-md-3">
+      <input type="text" class="form-control" name="planta" placeholder="Planta" value="{{ planta }}">
+    </div>
+    <div class="col-md-3">
+      <input type="text" class="form-control" name="analista" placeholder="Analista" value="{{ analista }}">
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+  </form>
+
+  <!-- Métricas principais -->
+  <div class="row text-center mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Total Projetos</h6>
+        <h2 class="fw-bold">{{ total_projetos }}</h2>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Projetos Finalizados</h6>
+        <h2 class="fw-bold">{{ projetos_finalizados }}</h2>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Projetos ON GOING</h6>
+        <h2 class="fw-bold">{{ projetos_ongoing }}</h2>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Média Projetos/Analista</h6>
+        <h2 class="fw-bold">{{ media_pleito_analista }}</h2>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Total Visitas</h6>
+        <h2 class="fw-bold">{{ visitas_realizadas }}</h2>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Investimento Aprovado</h6>
+        <h2 class="fw-bold">R$ {{ investimento_aprovado|floatformat:2 }}</h2>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm p-3">
+        <h6 class="text-muted">Média Lead Time (meses)</h6>
+        <h2 class="fw-bold">{{ media_leadtime }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="row mb-5">
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Status dos Projetos</h6>
+        <canvas id="chartStatusCapacity" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stellantis-card">
+        <h6 class="text-center">Status SOP</h6>
+        <canvas id="chartSOP" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-md-12">
+      <div class="stellantis-card">
+        <h6 class="text-center">Projetos ON GOING por Analista</h6>
+        <canvas id="chartOngoingAnalistas" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const statusCapacity      = JSON.parse('{{ status_capacity|escapejs }}');
+    const statusSOP           = JSON.parse('{{ status_sop|escapejs }}');
+    const ongoingAnalistas    = JSON.parse('{{ ongoing_analistas|escapejs }}');
+
+    // Gráfico de Barras - Status dos Projetos
+    new Chart(document.getElementById('chartStatusCapacity'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(statusCapacity),
+        datasets: [{ label: 'Projetos', data: Object.values(statusCapacity), backgroundColor: '#003865' }]
+      },
+      options: { responsive: true }
+    });
+
+    // Gráfico de Pizza - Status SOP
+    new Chart(document.getElementById('chartSOP'), {
+      type: 'pie',
+      data: {
+        labels: Object.keys(statusSOP),
+        datasets: [{ data: Object.values(statusSOP), backgroundColor: ['#003865','#28a745','#dc3545','#ffc107','#17a2b8'] }]
+      },
+      options: { responsive: true }
+    });
+
+    // Gráfico de Barras - Projetos ON GOING por Analista
+    new Chart(document.getElementById('chartOngoingAnalistas'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(ongoingAnalistas),
+        datasets: [{ label: 'Projetos ON GOING', data: Object.values(ongoingAnalistas), backgroundColor: '#007bff' }]
+      },
+      options: { responsive: true }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <script src="{% static 'ics_app/js/chart_config.js' %}"></script>
+
+</body>
+</html>
