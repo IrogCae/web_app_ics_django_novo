@@ -10,14 +10,16 @@ class ProvisaoGastoForm(forms.ModelForm):
             'iniciativa',
             'descricao',
             'provisao',
+            'sap',        
+            'fornecedor',
         ]
         widgets = {
             'id_projeto': forms.TextInput(attrs={'class':'form-control form-control-sm'}),
             'projeto':    forms.TextInput(attrs={'class':'form-control form-control-sm'}),
             'iniciativa': forms.TextInput(attrs={'class':'form-control form-control-sm'}),
             'descricao':  forms.TextInput(attrs={'class':'form-control form-control-sm'}),
-            'provisao':   forms.NumberInput(attrs={
-                                'class':'form-control form-control-sm',
-                                'step':'0.01'
-                            }),
+            'sap':        forms.TextInput(attrs={'class':'form-control form-control-sm'}),
+            'fornecedor': forms.TextInput(attrs={'class':'form-control form-control-sm'}),
+            'provisao':   forms.NumberInput(attrs={'class':'form-control form-control-sm', 'step':'0.01'}),
+          
         }

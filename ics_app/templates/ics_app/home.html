@@ -52,7 +52,7 @@
               {% csrf_token %}
               <input type="hidden" name="main_tab" value="{{ main_tab }}">
               <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
-              <input type="hidden" name="provisao_pk" id="provisao_pk">  <!-- campo PK para edição -->
+              <input type="hidden" name="provisao_pk" id="provisao_pk"> 
               <div class="modal-header">
                 <h5 class="modal-title" id="novaPropensaoLabel">Inserir Propensão de Gasto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
@@ -95,7 +95,7 @@
           <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
             <div style="font-size: 0.75rem;">
               <span class="fw-bold text-muted">Total de Provisões:</span>
-              <strong>{{ total_iniciativas }}</strong>
+              <strong>{{ total_provisoes }}</strong>
             </div>
           </div>
         </div>
@@ -104,7 +104,7 @@
           <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
             <div style="font-size: 0.75rem;">
               <span class="fw-bold text-muted">Valor Total de Provisões:</span>
-              <strong>{{ total_iniciativas }}</strong>
+              <strong>{{ valor_total_provisoes|moeda_brasileira }}</strong>
             </div>
           </div>
         </div>
@@ -123,7 +123,7 @@
             </thead>
             <tbody>
               {% for obj in provisoes %}
-                <tr data-id="{{ obj.pk }}">
+                <tr data-id="{{ obj.pk }}" class="row-selectable">
                   {% for field_name in provisao_fields %}
                     <td class="text-center">
                       {% if field_name == "provisao" %}

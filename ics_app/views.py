@@ -403,19 +403,14 @@ def home(request: HttpRequest) -> HttpResponse:
                 # soma orçamento total
                 valor_total_liq_iniciativas = qs_projetos.aggregate(total=Sum('orcamento'))['total'] or 0
 
-                # soma orçamentos abertos vs fechados
-                #valor_total_ativas = qs_projetos.filter(
-                 #   status__in=['AUT','CH_A','CH_B']
-                #).aggregate(total=Sum('orcamento'))['total'] or 0
-
-                #valor_total_fechadas = qs_projetos.filter(
-                #    status='CH_C'
-                #).aggregate(total=Sum('orcamento'))['total'] or 0
-
                 valor_total_ativas = qs_projetos.filter(status__in=['AUT','CH_A','CH_B']) \
                                         .aggregate(total=Sum('orcamento'))['total'] or 0
                 valor_total_fechadas = qs_projetos.filter(status='CH_C') \
                                             .aggregate(total=Sum('orcamento'))['total'] or 0
+                
+                total_provisoes = provisoes.count()
+
+                valor_total_provisoes = provisoes.aggregate(total=Sum('provisao'))['total'] or 0
 
                 return render(request, 'ics_app/home.html', {
                     'main_tabs': main_tabs,
@@ -429,7 +424,6 @@ def home(request: HttpRequest) -> HttpResponse:
                     'rows_projetos': rows_projetos,
                     'projetos': qs_projetos,
 
-                    # métricas antigas
                     'total_iniciativas': total_iniciativas,
                     'valor_total_liq_iniciativas': valor_total_liq_iniciativas,
 
@@ -448,6 +442,8 @@ def home(request: HttpRequest) -> HttpResponse:
                     'provisoes': provisoes,
                     'headers_provisao': headers_provisao,
                     'provisao_fields': provisao_fields,
+                    'total_previsoes': total_provisoes,
+                    'valor_total_provisoes': valor_total_provisoes,
                 })
 
     # ------- SURVEY ---------

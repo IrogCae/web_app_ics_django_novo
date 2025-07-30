@@ -25,6 +25,8 @@ class ProvisaoGasto(models.Model):
     projeto         = models.CharField("Projeto", max_length=100)
     iniciativa      = models.CharField("Iniciativa", max_length=100)
     descricao       = models.CharField("Descrição", max_length=100)
+    sap             = models.CharField("SAP", max_length=100, blank=True, null=True)  
+    fornecedor      = models.CharField("Fornecedor", max_length=255, blank=True, null=True)
     provisao        = models.DecimalField("Provisão (R$)", max_digits=15, decimal_places=2)
     data_criacao    = models.DateTimeField("Data de Criação", auto_now_add=True)
 
