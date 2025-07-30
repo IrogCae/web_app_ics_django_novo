@@ -1110,44 +1110,10 @@
         <a href="{% url 'dashboard_projetos' %}" class="btn btn-outline-primary btn-lg">Ver Dashboards</a>
       </div>
     {% endif %}
+
     <!-- ======================= Surveys / Data Display ======================= -->
-    <div class="row mb-3">
-      <div class="col-md-3">Tabela</div>
-      <div class="col-12">
-      {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-      {% elif main_tab == 'Survey' and sub_tab == 'Dash' %}
-        <!-- Survey Dashboard -->
-        <div class="card mb-4 text-center">
-        <div class="card-body">
-          <h5>Total de Surveys</h5>
-          <p class="display-4">{{ n_surveys }}</p>
-        </div>
-        </div>
-        <canvas id="chartResponseRate" height="100"></canvas>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-        const labels = JSON.parse('{{ survey_codes_json|escapejs }}');
-        const data   = JSON.parse('{{ response_rates_json|escapejs }}');
-        new Chart(document.getElementById('chartResponseRate').getContext('2d'), {
-          type: 'bar',
-          data: { labels: labels, datasets: [{ label: '% Resposta', data: data, borderWidth:1 }] },
-          options: { scales:{ y:{ beginAtZero:true, max:100 } }}
-        });
-        </script>
-      {% elif df_html %}
-        <!-- Data Table -->
-        <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.65rem; line-height:1.2; border:1px solid #ddd; padding:.5rem;">
-        {{ df_html|safe }}
-        </div>
-      {% endif %}
-      </div>
-    </div>
-    <style>
-      tr.table-active {
-      background-color: #9fc4fc !important;
-      }
-    </style>
+
+
 {% endblock %}
 
 {% block extra_js %}

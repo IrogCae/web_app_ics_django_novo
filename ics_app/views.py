@@ -451,6 +451,7 @@ def home(request: HttpRequest) -> HttpResponse:
                 })
 
     # ------- SURVEY ---------
+    
     context = {
         'main_tabs': main_tabs, 'main_tab': main_tab,
         'sub_tabs': sub_tabs, 'sub_tab': sub_tab,

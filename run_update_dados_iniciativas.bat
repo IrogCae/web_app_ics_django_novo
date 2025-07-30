@@ -22,7 +22,9 @@ python manage.py update_dados_pedidos
 python manage.py update_dados_pleitos
 python manage.py update_dados_projetos_iniciativas
 python manage.py update_dados_projetos
-python manage.py update_rda_sem_pedido
+python manage.py update_dados_rda_aprovada
+python manage.py update_dados_rda_sem_pedido
+python manage.py update_dados_survey.py
 
 REM — (Opcional) Grava log
 if not exist logs mkdir logs

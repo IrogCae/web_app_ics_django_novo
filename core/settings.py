@@ -151,7 +151,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # diretório “raw data”
 DATA_ROOT = BASE_DIR / "data"
-#DADOS_EXCEL_PATH = DATA_ROOT / "base_completa_iniciativa.xlsx"
+DADOS_SURVEY_PATH = DATA_ROOT / "survey_export.xlsx"
 BASE_COMPLETA_INICIATIVA_PATH = DATA_ROOT / "base_completa_iniciativa.xlsx"
 DADOS_PEDIDOS_AQ_PATH = DATA_ROOT / "dados_pedidos_aq.xlsx"
 DADOS_PEDIDOS_ADIANTADOS_PATH = DATA_ROOT / "dados_pedidos_adiantados.xlsx"
