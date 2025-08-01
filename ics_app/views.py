@@ -1,4 +1,3 @@
-
 import statistics
 import logging
 import pandas as pd
@@ -7,7 +6,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import DecimalField, Count, Sum
+from django.db.models import DecimalField, Count, Sum,  F, FloatField
 from django.core.management.base import BaseCommand
 from .models import (
     RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
@@ -412,6 +411,39 @@ def home(request: HttpRequest) -> HttpResponse:
 
                 valor_total_provisoes = provisoes.aggregate(total=Sum('provisao'))['total'] or 0
 
+                # === NOVO BLOCO DE FILTRO E GRÁFICO ===
+                iniciativas_filtradas = request.GET.getlist('iniciativa')
+                qs_projeto = ProjetoIniciativa.objects.all()
+                if iniciativas_filtradas:
+                    qs_projeto = qs_projeto.filter(iniciativa__in=iniciativas_filtradas)
+                todas_iniciativas = ProjetoIniciativa.objects.values_list('iniciativa', flat=True).order_by('iniciativa').distinct()
+
+                # Monta os arrays para o gráfico:
+                labels = []
+                consumido = []
+                proposto = []
+                livre = []
+                qs_provisao = ProvisaoGasto.objects.all()
+                provisao_lookup = {}
+                for obj in qs_provisao:
+                    chave = getattr(obj, 'iniciativa', None)
+                    if chave:
+                        provisao_lookup[chave] = provisao_lookup.get(chave, 0) + float(obj.provisao or 0)
+
+                for ini in qs_projeto:
+                    id_iniciativa = ini.iniciativa
+                    labels.append(ini.descricao or ini.iniciativa or str(id_iniciativa))
+                    val_orc = float(ini.orcamento or 0)
+                    val_consumido = float(getattr(ini, 'valor_total_pedidos_pagos', 0) or 0)
+                    val_proposto = float(provisao_lookup.get(id_iniciativa, 0))
+                    val_livre = max(0, val_orc - val_consumido - val_proposto)
+                    consumido.append(val_consumido)
+                    proposto.append(val_proposto)
+                    livre.append(val_livre)
+
+                # Recebe uma lista de iniciativas selecionadas
+                iniciativa_selecionada = request.GET.getlist('iniciativa')  # Agora retorna lista!
+
                 return render(request, 'ics_app/home.html', {
                     'main_tabs': main_tabs,
                     'main_tab': main_tab,
@@ -444,6 +476,13 @@ def home(request: HttpRequest) -> HttpResponse:
                     'provisao_fields': provisao_fields,
                     'total_previsoes': total_provisoes,
                     'valor_total_provisoes': valor_total_provisoes,
+                    
+                    'grafico_iniciativas_labels': labels,
+                    'grafico_iniciativas_consumido': consumido,
+                    'grafico_iniciativas_proposto': proposto,
+                    'grafico_iniciativas_livre': livre,
+                    'iniciativa_selecionada': iniciativa_selecionada,
+                    'todas_iniciativas': todas_iniciativas,
                 })
 
     # ------- SURVEY ---------
@@ -495,24 +534,44 @@ def home(request: HttpRequest) -> HttpResponse:
 
     return render(request, 'ics_app/home.html', context)
 
-@login_required(login_url='login')
-def dashboard_iniciativas(request: HttpRequest) -> HttpResponse:
-    main_tabs = ["Iniciativas", "RDA's", "Pedidos"]
-    main_tab  = "Iniciativas"
-    sub_tabs  = ["dadosiniciativa", "rda_sem_pedido"]
-    sub_tab   = request.GET.get("sub_tab", sub_tabs[0])
+@login_required
+def dados_grafico_iniciativas(request):
+    # Pega as iniciativas selecionadas (pode ser múltipla!)
+    iniciativas = request.GET.getlist('iniciativa')
+    qs_provisao_gasto = ProvisaoGasto.objects.all()
+    provisao_lookup = {}
+    for obj in qs_provisao_gasto:
+        chave = getattr(obj, 'iniciativa', None)
+        if chave:
+            provisao_lookup[chave] = provisao_lookup.get(chave, 0) + float(obj.provisao or 0)
 
-    qs = (RdaSemPedido.objects.all() 
-          if sub_tab == 'rda_sem_pedido'
-          else RdaAprovada.objects.all())
-    headers = [f.verbose_name for f in qs.model._meta.fields]
-    rows    = [[getattr(o, f.name) for f in qs.model._meta.fields] for o in qs]
+    qs_projeto_iniciativa = ProjetoIniciativa.objects.all()
+    if iniciativas:
+        qs_projeto_iniciativa = qs_projeto_iniciativa.filter(iniciativa__in=iniciativas)
 
-    return render(request, "ics_app/home.html", {
-        "main_tabs": main_tabs, "main_tab": main_tab,
-        "sub_tabs": sub_tabs, "sub_tab": sub_tab,
-        "headers": headers, "rows": rows,
+    # Prepara os dados
+    labels, consumido, proposto, livre = [], [], [], []
+    for ini in qs_projeto_iniciativa:
+        id_iniciativa = ini.iniciativa
+        labels.append(ini.descricao or ini.iniciativa or str(id_iniciativa))
+        val_orc = float(ini.orcamento or 0)
+        val_consumido = float(getattr(ini, 'valor_total_pedidos_pagos', 0) or 0)
+        val_proposto = float(provisao_lookup.get(id_iniciativa, 0))
+        val_livre = max(0, val_orc - val_consumido - val_proposto)
+        consumido.append(val_consumido)
+        proposto.append(val_proposto)
+        livre.append(val_livre)
+
+    return JsonResponse({
+        'labels': labels,
+        'consumido': consumido,
+        'proposto': proposto,
+        'livre': livre,
     })
+
+
+
+
 
 
 @login_required(login_url='login')

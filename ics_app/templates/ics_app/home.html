@@ -142,7 +142,7 @@
             </tbody>
           </table>
       </div>
-      
+
       <!-- Botão Editar/Inserir Nova Iniciativa -->
       <div class="mb-3">
         <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalNovaIniciativa">Inserir Iniciativa Nova</button>
@@ -267,6 +267,42 @@
         </table>
       </div>
 
+      <!-- Botão para Dashboard de Iniciativas -->
+      <div class="text-center my-4">
+        <a href="{% url 'iniciativas_dash' %}"
+          class="btn btn-primary btn-lg px-5">Ver Dashboards</a>
+      </div>
+      <!-- GRAFICO INICIATIVAS -->
+      <div class="row mb-5">
+        <div class="col-12">
+          <div class="stellantis-card" style="height:auto; min-height:auto;">
+            <h6 class="text-center mb-3">
+               Distribuição dos Valores por Iniciativa
+            </h6>
+            <!-- Filtro de Iniciativa só para o gráfico -->
+            <form method="get" class="mb-3 d-flex align-items-center gap-2 justify-content-end">
+              <label for="iniciativa" class="form-label mb-0"><strong>Selecione a Iniciativa:</strong></label>
+              <select name="iniciativa" id="iniciativa-select2" class="form-select form-select-sm" style="width:300px;" onchange="this.form.submit()">
+                <option value="">Todas</option>
+                {% for ini in todas_iniciativas %}
+                  <option value="{{ ini }}" {% if iniciativa_selecionada == ini %}selected{% endif %}>{{ ini }}</option>
+                {% endfor %}
+              </select>
+            </form>
+            <canvas id="graficoIniciativasValores" style="height:auto !important; max-height:auto; width:90%;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.graficoIniciativasConfig = {
+          labels: {{ grafico_iniciativas_labels|safe }},
+          consumido: {{ grafico_iniciativas_consumido|safe }},
+          proposto: {{ grafico_iniciativas_proposto|safe }},
+          livre: {{ grafico_iniciativas_livre|safe }},
+        }
+      </script>
+      
       {% elif sub_tab == 'rda_sem_pedido' %}
       <!-- Botão Editar RDA -->
       <div class="mb-3">
@@ -1111,12 +1147,11 @@
       </div>
     {% endif %}
 
-    <!-- ======================= Surveys / Data Display ======================= -->
-
-
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'ics_app/js/chat_config.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <script src="{% static 'ics_app/js/chart_config.js' %}"></script>
   <script src="{% static 'ics_app/js/ics_home.js' %}"></script>
 {% endblock %}

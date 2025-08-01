@@ -1,32 +1,111 @@
-{% extends "ics_app/base.html" %}
 {% load static %}
+{% load formatadores %}
+{% now "U" as now %}
 
-{% block content %}
-  {# — nav das abas principais — #}
-  <ul class="nav nav-tabs mb-3">
-    {% for tab in main_tabs %}
-      <li class="nav-item">
-        <a class="nav-link {% if tab == main_tab %}active{% endif %}"
-           href="{% if tab == 'Iniciativas' %}{% url 'dashboard_iniciativas' %}{% else %}?main_tab={{ tab }}{% endif %}">
-          {{ tab }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Iniciativas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{% static 'ics_app/css/style.css' %}">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</head>
+<body class="container-fluid p-4 stellantis-dark">
 
-  {# — nav das sub-abas de “Iniciativas” — #}
-  <ul class="nav nav-pills mb-3">
-    {% for sheet in sub_tabs %}
-      <li class="nav-item">
-        <a class="nav-link {% if sheet == sub_tab %}active{% endif %}"
-           href="{% url 'dashboard_iniciativas' %}?sub_tab={{ sheet }}">
-          {{ sheet|capfirst }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+  <a href="{% url 'home' %}?main_tab=Iniciativa&sub_tab=dados_iniciativa" class="btn btn-back-light btn-sm mb-4">
+    ← Voltar para Iniciativas
+  </a>
 
-{% with filename=sub_tab|slugify %}
-  {% include "ics_app/iniciativas/"|add:filename|add:".html" %}
-{% endwith %}
-{% endblock %}
+  <h2 class="mb-4">Dashboard – Iniciativas</h2>
+
+  <form method="get" class="mb-4 d-flex align-items-center gap-2">
+    <label for="iniciativa" class="form-label mb-0"><strong>Selecione a(s) Iniciativa(s):</strong></label>
+    <select name="iniciativa" id="iniciativa-select2" class="form-select form-select-sm" style="width:300px;" multiple>
+      {% for ini in todas_iniciativas %}
+        <option value="{{ ini }}"
+          {% if iniciativa_selecionada and ini in iniciativa_selecionada %}selected{% endif %}>{{ ini }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm ms-2">Filtrar</button>
+  </form>
+
+  {% if iniciativa_selecionada %}
+    <h5 class="mb-4">Iniciativas Selecionadas:
+      <strong>
+        {% for ini in iniciativa_selecionada %}
+          {{ ini }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </strong>
+    </h5>
+  {% else %}
+    <h5 class="mb-4">Nenhuma Iniciativa Selecionada</h5>
+  {% endif %}
+
+  <div class="row text-center mb-5">
+    <div class="col-3 mb-3">
+      <div class="card shadow-sm p-6">
+        <h6 class="text-muted">Total de Iniciativas</h6>
+        <h2 class="fw-bold">{{ total_iniciativas }}</h2>
+      </div>
+    </div>
+    <div class="col-3 mb-3">
+      <div class="card shadow-sm p-6">
+        <h6 class="text-muted">Valor Total</h6>
+        <h2 class="fw-bold">{{ total_orcamento|moeda_brasileira }}</h2>
+      </div>
+    </div>
+    <div class="col-3 mb-6">
+      <div class="card shadow-sm p-6">
+        <h6 class="text-muted">Ano(s) Cadastrados</h6>
+        <h2 class="fw-bold">
+          {% for a in anos %}{{ a }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </h2>
+      </div>
+    </div>
+    <div class="col-3 mb-6">
+      <div class="card shadow-sm p-6">
+        <h6 class="text-muted">Status</h6>
+        <h2 class="fw-bold">
+          {% for st, qtd in status_counts.items %}
+            {{ st }}: {{ qtd }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="stellantis-card" style="height:auto; min-height:auto;">
+        <h6 class="text-center mb-3">
+          Distribuição dos Valores por Iniciativa
+        </h6>
+        <canvas id="graficoIniciativasValores" style="height:auto !important; max-height:auto; width:90%;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <script src="{% static 'ics_app/js/chart_config.js' %}"></script>
+  <script>
+    $(document).ready(function() {
+      $('#iniciativa-select2').select2({
+        placeholder: "Digite ou escolha...",
+        allowClear: true,
+        width: 'resolve',
+        textColor: '#000',
+        dropdownAutoWidth: true,
+        language: "pt-BR"
+      });
+      // Submete automaticamente ao escolher (Select2 não propaga onchange padrão)
+      $('#iniciativa-select2').on('change', function(){
+        this.form.submit();
+      });
+    });
+  </script>
+</body>
+</html>

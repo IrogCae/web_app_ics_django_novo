@@ -200,3 +200,45 @@ a.btn {
   white-space: nowrap;
   word-break: keep-all;
 }
+.select2-container--default .select2-selection--single {
+  background-color: #f1f6fa !important;
+}
+.select2-results__option {
+  color: #00375f !important;
+}
+.select2-results__option--highlighted,
+.select2-results__option[aria-selected="true"] {
+      background-color: #f1f6fa !important;
+      color: #00375f !important;
+}
+.select2-selection__rendered {
+      color: #00375f !important;
+}
+.select2-selection__placeholder {
+      color: #888 !important;
+      font-style: italic !important;
+}
+
+/* Cards de indicadores menores para o dashboard ICS */
+.dashboard-card-sm {
+  min-width: 150px !important;
+  max-width: 250px;
+  min-height: 60px !important;
+  max-height: 110px !important;
+  padding: 0.8rem 1.2rem !important;
+  margin: 0 auto !important;
+  border-radius: 0.75rem !important;
+  font-size: 1rem !important;
+}
+.dashboard-card-sm h6 {
+  font-size: 1rem !important;
+  margin-bottom: 0.4rem;
+}
+.dashboard-card-sm h2 {
+  font-size: 2rem !important;
+  margin-bottom: 0;
+}
+@media (max-width: 1000px) {
+  .dashboard-card-sm { min-width: 120px; font-size: 0.92rem; }
+  .dashboard-card-sm h2 { font-size: 1.2rem; }
+}
