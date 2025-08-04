@@ -13,7 +13,7 @@ from .models import (
     DadosPedidosPendentes, DadosPedidosAdiantados, DadosPedidosPagos,
     FollowupIniciativa, ProjetoIniciativa, ProvisaoGasto
 )
-from .forms import ProvisaoGastoForm
+from .forms import ProvisaoGastoForm, ProjetoIniciativaForm
 from .utils.config import EXCEL_PATH, ANALISTAS, RESPONSABILIDADES
 from .utils.data_processing import (
     list_sheets, load_dataframe, load_all_surveys,
@@ -88,22 +88,31 @@ def home(request: HttpRequest) -> HttpResponse:
             logger.error("Erro ao atualizar Projetos: %s", e)
         return redirect(f"{request.path}?main_tab=Projetos&sub_tab=projetos")
     
-    # tratamento POST editar Propensão de Gasto
+    # tratamento POST editar Propensão de Gasto ou Projeto Iniciativa
     if request.method == 'POST' and main_tab == 'Iniciativa' and sub_tab.lower() == 'dados_iniciativa':
-        provisao_pk = request.POST.get('provisao_pk', '').strip()
-        if provisao_pk:
-            # Edição
-            obj = ProvisaoGasto.objects.filter(pk=provisao_pk).first()
-            form = ProvisaoGastoForm(request.POST, instance=obj)
-        else:
-            # Novo
-            form = ProvisaoGastoForm(request.POST)
-        if form.is_valid():
-            form.save()
+        if 'provisao_pk' in request.POST:
+            provisao_pk = request.POST.get('provisao_pk', '').strip()
+            if provisao_pk:
+                obj = ProvisaoGasto.objects.filter(pk=provisao_pk).first()
+                form = ProvisaoGastoForm(request.POST, instance=obj)
+            else:
+                form = ProvisaoGastoForm(request.POST)
+            if form.is_valid():
+                form.save()
+        elif 'iniciativa_pk' in request.POST:
+            iniciativa_pk = request.POST.get('iniciativa_pk', '').strip()
+            if iniciativa_pk:
+                obj = ProjetoIniciativa.objects.filter(pk=iniciativa_pk).first()
+                form = ProjetoIniciativaForm(request.POST, instance=obj)
+            else:
+                form = ProjetoIniciativaForm(request.POST)
+            if form.is_valid():
+                form.save()
         return redirect(request.path + '?main_tab=Iniciativa&sub_tab=dados_iniciativa')
 
-    # daqui pra baixo é só GET: monta context, incluindo form_provisao e provisoes
+    # daqui pra baixo é só GET: monta context, incluindo forms e provisoes
     form_provisao = ProvisaoGastoForm()
+    form_iniciativa = ProjetoIniciativaForm()
     provisoes     = ProvisaoGasto.objects.order_by('-data_criacao')
     headers_provisao       = [f.verbose_name for f in ProvisaoGasto._meta.fields]
     provisao_fields  = [f.name for f in ProvisaoGasto._meta.fields]
@@ -476,6 +485,7 @@ def home(request: HttpRequest) -> HttpResponse:
 
                     # ADICIONE ESTAS LINHAS ABAIXO:
                     'form_provisao': form_provisao,
+                    'form_iniciativa': form_iniciativa,
                     'provisoes': provisoes,
                     'headers_provisao': headers_provisao,
                     'provisao_fields': provisao_fields,
@@ -853,5 +863,15 @@ def excluir_provisao_gasto(request, pk):
     if request.method != "POST":
         return JsonResponse({"error": "Método não permitido"}, status=405)
     obj = get_object_or_404(ProvisaoGasto, pk=pk)
+    obj.delete()
+
+    return JsonResponse({"success": True})
+
+
+@login_required
+def excluir_iniciativa(request, pk):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método não permitido"}, status=405)
+    obj = get_object_or_404(ProjetoIniciativa, pk=pk)
     obj.delete()
     return JsonResponse({"success": True})

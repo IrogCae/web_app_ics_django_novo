@@ -8,13 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (form) form.reset();
       if (!table) return;
 
-      // Destaca linha selecionada com fundo azul claro
-      table.querySelectorAll('tbody tr').forEach(row =>
-        row.addEventListener('click', () => {
-          table.querySelectorAll('tbody tr').forEach(r => r.classList.remove('table-active'));
-          row.classList.add('table-active');
-        })
-      );
+      // Destaca linha selecionada em todas as tabelas responsivas
+      document.querySelectorAll('.table-responsive table').forEach(tbl => {
+        tbl.querySelectorAll('tbody tr').forEach(row => {
+          row.addEventListener('click', () => {
+            tbl.querySelectorAll('tbody tr').forEach(r => r.classList.remove('table-active'));
+            row.classList.add('table-active');
+          });
+        });
+      });
 
       // Editar Provisão de Gasto
       const btnEditarProvisao = document.getElementById('btn-editar-provisao');
@@ -71,6 +73,68 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!confirm('Tem certeza que deseja excluir esta Propensão de Gasto?')) return;
 
           fetch(`/excluir_provisao_gasto/${pk}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+          })
+          .then(resp => {
+            if (!resp.ok) throw new Error('Erro ao excluir');
+            location.reload();
+          })
+          .catch(err => alert('Erro ao excluir: ' + err));
+        });
+      }
+
+      // Tabela de iniciativas (segunda tabela na página)
+      const tables = document.querySelectorAll('.table-responsive table');
+      const tabelaIniciativas = tables.length > 1 ? tables[1] : null;
+
+      // Editar Iniciativa
+      const btnEditarIniciativa = document.getElementById('btn-editar-iniciativa');
+      const btnExcluirIniciativa = document.getElementById('btn-excluir-iniciativa');
+      const btnInserirIniciativa = document.querySelector('[data-bs-target="#modalNovaIniciativa"]');
+      if (btnEditarIniciativa && tabelaIniciativas) {
+        btnEditarIniciativa.addEventListener('click', () => {
+          const sel = tabelaIniciativas.querySelector('tbody tr.table-active');
+          if (!sel) return alert('Selecione uma linha da tabela INICIATIVAS antes de editar.');
+          const cells = sel.querySelectorAll('td');
+          const modal = document.getElementById('modalNovaIniciativa');
+          modal.querySelector('#iniciativa_pk').value = sel.getAttribute('data-id') || '';
+          modal.querySelector('[name="comite"]').value = cells[1].innerText.trim();
+          modal.querySelector('[name="e_car"]').value = cells[2].innerText.trim();
+          modal.querySelector('[name="projetos_para_extracao"]').value = cells[3].innerText.trim();
+          modal.querySelector('[name="iniciativa"]').value = cells[4].innerText.trim();
+          modal.querySelector('[name="descricao"]').value = cells[5].innerText.trim();
+          modal.querySelector('[name="planta"]').value = cells[6].innerText.trim();
+          modal.querySelector('[name="ano_aprovacao"]').value = cells[7].innerText.trim();
+          modal.querySelector('[name="bdgt"]').value = cells[8].innerText.trim();
+          modal.querySelector('[name="status"]').value = cells[9].innerText.trim();
+          modal.querySelector('[name="orcamento"]').value = cells[10].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+          modal.querySelector('[name="disposto_sem_imposto"]').value = cells[11].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+          modal.querySelector('[name="valor_total_pedidos_emitidos"]').value = cells[12].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+          modal.querySelector('[name="valor_total_pedidos_pagos"]').value = cells[13].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+          modal.querySelector('[name="provisao"]').value = cells[14].innerText.trim();
+
+          if (btnExcluirIniciativa) btnExcluirIniciativa.style.display = '';
+          new bootstrap.Modal(modal).show();
+        });
+      }
+
+      if (btnInserirIniciativa && btnExcluirIniciativa) {
+        btnInserirIniciativa.addEventListener('click', () => {
+          btnExcluirIniciativa.style.display = 'none';
+          const modal = document.getElementById('modalNovaIniciativa');
+          modal.querySelector('#iniciativa_pk').value = '';
+          modal.querySelectorAll('input').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+        });
+      }
+
+      if (btnExcluirIniciativa) {
+        btnExcluirIniciativa.addEventListener('click', function () {
+          const pk = document.getElementById('iniciativa_pk').value;
+          if (!pk) return;
+          if (!confirm('Tem certeza que deseja excluir esta Iniciativa?')) return;
+
+          fetch(`/excluir_iniciativa/${pk}/`, {
             method: 'POST',
             headers: { 'X-CSRFToken': getCSRFToken() }
           })
