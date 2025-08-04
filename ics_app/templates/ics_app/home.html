@@ -99,6 +99,7 @@
             </div>
           </div>
         </div>
+
         <!-- Valor Total de Provisões -->
         <div class="d-flex flex-column gap-1">
           <div class="card p-1 text-center shadow-sm" style="min-width: 120px;">
@@ -182,6 +183,7 @@
             line-height: 1.1; border-radius: 0.5rem;">
         INICIATIVAS
       </div>
+
       <!-- Linhas com valores e cálculos das INICIATIVAS -->
       <div class="d-flex justify-content-center gap-2 my-1">
 
@@ -272,7 +274,7 @@
         <a href="{% url 'iniciativas_dash' %}"
           class="btn btn-primary btn-lg px-5">Ver Dashboards</a>
       </div>
-      
+
       <!-- GRAFICO INICIATIVAS -->
       <div class="row mb-5">
         <div class="col-12">
@@ -280,17 +282,25 @@
             <h6 class="text-center mb-3">
                Distribuição dos Valores por Iniciativa
             </h6>
+
             <!-- Filtro de Iniciativa só para o gráfico -->
-            <form method="get" class="mb-3 d-flex align-items-center gap-2 justify-content-end">
+            <form method="get" class="mb-3 d-flex align-items-center gap-2">
               <input type="hidden" name="main_tab" value="{{ main_tab }}">
               <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
               <label for="iniciativa" class="form-label mb-0"><strong>Selecione a Iniciativa:</strong></label>
-              <select name="iniciativa" id="iniciativa-select2" class="form-select form-select-sm" style="width:300px;" onchange="this.form.submit()">
-                <option value="">Todas</option>
+              <select name="iniciativa" id="iniciativa-select2" class="form-select form-select-sm" style="width:300px;">
+                <option value=""></option>
                 {% for ini in todas_iniciativas %}
-                  <option value="{{ ini }}" {% if iniciativa_selecionada == ini %}selected{% endif %}>{{ ini }}</option>
+                  <option value="{{ ini.iniciativa }}" {% if ini.iniciativa in iniciativa_selecionada %}selected{% endif %}>{{ ini.descricao }}</option>
                 {% endfor %}
               </select>
+              <span id="iniciativa-selecionada" class="fw-bold ms-2">Mostrando todas as iniciativas</span>
+                {% if iniciativa_selecionada %}
+                  {{ iniciativa_selecionada }}
+                {% else %}
+                  Mostrando todas as iniciativas
+                {% endif %}
+              </span>
             </form>
             <canvas id="graficoIniciativasValores" style="height:auto !important; max-height:auto; width:90%;"></canvas>
           </div>
@@ -307,10 +317,12 @@
       </script>
       
       {% elif sub_tab == 'rda_sem_pedido' %}
+
       <!-- Botão Editar RDA -->
       <div class="mb-3">
         <button id="btn-editar-rda" class="btn btn-outline-primary btn-sm">Editar RDA</button>
       </div>
+
       <!-- Modal Editar RDA -->
       <div class="modal fade" id="modalEditarRda" tabindex="-1" aria-labelledby="editarRdaLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -351,6 +363,7 @@
         </div>
         </div>
       </div>
+
       <!-- Modal Envio de E-mail -->
       <div class="modal fade" id="modalEnvioEmail" tabindex="-1" aria-labelledby="envioEmailLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -362,6 +375,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
           </div>
           <div class="modal-body">
+
             <!-- 1) Tabela de leitura com os dados da linha -->
             <table class="table table-sm mb-4">
             <tbody>
@@ -377,6 +391,7 @@
               <tr><th>Data Envio DAF</th>  <td id="modalEnvioDaf"></td></tr>
             </tbody>
             </table>
+
             <!-- 2) Campos extras que o usuário vai preencher -->
             <div class="mb-3">
             <label for="emailAssunto" class="form-label">Assunto</label>
@@ -1153,6 +1168,34 @@
 {% endblock %}
 
 {% block extra_js %}
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $(function() {
+      const $select = $('#iniciativa-select2');
+      const $display = $('#iniciativa-selecionada');
+
+      function updateSelected() {
+        const data = $select.select2('data');
+        if (data.length && data[0].id) {
+          $display.text(data[0].text);
+        } else {
+          $display.text('Mostrando todas as iniciativas');
+        }
+      }
+
+      $select.select2({
+        placeholder: 'Digite ou escolha...',
+        allowClear: true
+      }).on('change', function() {
+        updateSelected();
+        $(this).closest('form').submit();
+      });
+
+      updateSelected();
+    });
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="{% static 'ics_app/js/chart_config.js' %}"></script>

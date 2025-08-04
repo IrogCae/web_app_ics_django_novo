@@ -416,7 +416,12 @@ def home(request: HttpRequest) -> HttpResponse:
                 qs_projeto = ProjetoIniciativa.objects.all()
                 if iniciativas_filtradas:
                     qs_projeto = qs_projeto.filter(iniciativa__in=iniciativas_filtradas)
-                todas_iniciativas = ProjetoIniciativa.objects.values_list('iniciativa', flat=True).order_by('iniciativa').distinct()
+                todas_iniciativas = (
+                    ProjetoIniciativa.objects
+                    .values('iniciativa', 'descricao')
+                    .order_by('descricao')
+                    .distinct()
+                )
 
                 # Monta os arrays para o gráfico:
                 labels = []
@@ -474,7 +479,7 @@ def home(request: HttpRequest) -> HttpResponse:
                     'provisoes': provisoes,
                     'headers_provisao': headers_provisao,
                     'provisao_fields': provisao_fields,
-                    'total_previsoes': total_provisoes,
+                    'total_provisoes': total_provisoes,
                     'valor_total_provisoes': valor_total_provisoes,
                     
                     'grafico_iniciativas_labels': labels,

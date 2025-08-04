@@ -39,7 +39,7 @@ class ProvisaoGasto(models.Model):
         return f"{self.iniciativa} – R$ {self.provisao}"
 
 class ProjetoIniciativa(models.Model):
-    comite                      = models.CharField("E-car",max_length=255,blank=True,null=True)
+    comite                      = models.CharField("Comitê",max_length=255,blank=True,null=True)
     e_car                       = models.CharField("E-car",max_length=255,blank=True,null=True)
     projetos_para_extracao      = models.CharField("Projetos para Extração",max_length=255,blank=True,null=True)
     iniciativa                  = models.CharField("Iniciativa",max_length=255,blank=True,null=True)
