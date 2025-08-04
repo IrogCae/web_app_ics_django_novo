@@ -535,6 +535,65 @@ def home(request: HttpRequest) -> HttpResponse:
     return render(request, 'ics_app/home.html', context)
 
 @login_required
+def iniciativas_dash(request):
+    """Exibe o dashboard de iniciativas com métricas e gráfico."""
+    iniciativas = request.GET.getlist('iniciativa')
+
+    qs_projeto = ProjetoIniciativa.objects.all()
+    qs_provisao = ProvisaoGasto.objects.all()
+    if iniciativas:
+        qs_projeto = qs_projeto.filter(iniciativa__in=iniciativas)
+        qs_provisao = qs_provisao.filter(iniciativa__in=iniciativas)
+
+    total_iniciativas = qs_projeto.count()
+    total_orcamento = qs_projeto.aggregate(total=Sum('orcamento'))['total'] or 0
+    anos = list(
+        qs_projeto.filter(ano_aprovacao__isnull=False)
+        .values_list('ano_aprovacao', flat=True)
+        .distinct()
+    )
+    status_counts = {
+        item['status']: item['qtd']
+        for item in qs_projeto.values('status').annotate(qtd=Count('status'))
+    }
+
+    provisao_lookup = {
+        item['iniciativa']: float(item['total'] or 0)
+        for item in qs_provisao.values('iniciativa').annotate(total=Sum('provisao'))
+    }
+
+    labels, consumido, proposto, livre = [], [], [], []
+    for ini in qs_projeto:
+        chave = ini.iniciativa
+        labels.append(ini.descricao or ini.iniciativa or str(chave))
+        val_consumido = float(getattr(ini, 'valor_total_pedidos_pagos', 0) or 0)
+        val_proposto = float(provisao_lookup.get(chave, 0))
+        val_orc = float(ini.orcamento or 0)
+        val_livre = max(0, val_orc - val_consumido - val_proposto)
+        consumido.append(val_consumido)
+        proposto.append(val_proposto)
+        livre.append(val_livre)
+
+    todas_iniciativas = list(
+        ProjetoIniciativa.objects.values_list('iniciativa', flat=True).distinct()
+    )
+
+    context = {
+        'todas_iniciativas': todas_iniciativas,
+        'iniciativa_selecionada': iniciativas,
+        'total_iniciativas': total_iniciativas,
+        'total_orcamento': total_orcamento,
+        'anos': anos,
+        'status_counts': status_counts,
+        'grafico_iniciativas_labels': json.dumps(labels),
+        'grafico_iniciativas_consumido': json.dumps(consumido),
+        'grafico_iniciativas_proposto': json.dumps(proposto),
+        'grafico_iniciativas_livre': json.dumps(livre),
+    }
+
+    return render(request, 'ics_app/iniciativas_dash.html', context)
+
+@login_required
 def dados_grafico_iniciativas(request):
     # Pega as iniciativas selecionadas (pode ser múltipla!)
     iniciativas = request.GET.getlist('iniciativa')

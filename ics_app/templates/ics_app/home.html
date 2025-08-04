@@ -272,6 +272,7 @@
         <a href="{% url 'iniciativas_dash' %}"
           class="btn btn-primary btn-lg px-5">Ver Dashboards</a>
       </div>
+      
       <!-- GRAFICO INICIATIVAS -->
       <div class="row mb-5">
         <div class="col-12">
@@ -281,6 +282,8 @@
             </h6>
             <!-- Filtro de Iniciativa só para o gráfico -->
             <form method="get" class="mb-3 d-flex align-items-center gap-2 justify-content-end">
+              <input type="hidden" name="main_tab" value="{{ main_tab }}">
+              <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
               <label for="iniciativa" class="form-label mb-0"><strong>Selecione a Iniciativa:</strong></label>
               <select name="iniciativa" id="iniciativa-select2" class="form-select form-select-sm" style="width:300px;" onchange="this.form.submit()">
                 <option value="">Todas</option>

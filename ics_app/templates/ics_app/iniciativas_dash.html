@@ -88,12 +88,20 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-  <script src="{% static 'ics_app/js/chart_config.js' %}"></script>
-  <script>
-    $(document).ready(function() {
-      $('#iniciativa-select2').select2({
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script>
+      window.graficoIniciativasConfig = {
+        labels: {{ grafico_iniciativas_labels|safe }},
+        consumido: {{ grafico_iniciativas_consumido|safe }},
+        proposto: {{ grafico_iniciativas_proposto|safe }},
+        livre: {{ grafico_iniciativas_livre|safe }}
+      };
+    </script>
+    <script src="{% static 'ics_app/js/chart_config.js' %}"></script>
+    <script>
+      $(document).ready(function() {
+        $('#iniciativa-select2').select2({
         placeholder: "Digite ou escolha...",
         allowClear: true,
         width: 'resolve',
