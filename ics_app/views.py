@@ -37,6 +37,13 @@ TAB_MODEL_MAP = {
     'pedidos': Pedido,
 }
 
+def get_field_value(obj, field):
+    value = getattr(obj, field.name)
+    if value is None and isinstance(field, DecimalField):
+        return 0
+    return value
+
+
 @login_required(login_url='login')
 def home(request: HttpRequest) -> HttpResponse:
     main_tabs = list(EXCEL_PATH.keys()) + ['Iniciativa']
@@ -63,6 +70,9 @@ def home(request: HttpRequest) -> HttpResponse:
     elemento_pep          = request.GET.get('elemento_pep', '').strip()
     fornecedor_solicitado = request.GET.get('fornecedor_solicitado', '').strip()
     sap_supplier          = request.GET.get('sap_supplier', '').strip()
+    iniciativa            = request.GET.get('iniciativa', '').strip()
+    projetos_para_extracao = request.GET.get('projetos_para_extracao', '').strip()
+    ano_aprovacao         = request.GET.get('ano_aprovacao', '').strip()
 
     if request.method == 'POST' and main_tab == 'Projetos' and sub_tab.lower() == 'pleitos':
         try:
@@ -144,17 +154,17 @@ def home(request: HttpRequest) -> HttpResponse:
     if main_tab == 'Iniciativa' and sub_tab == 'pedidos':
         headers_pendentes = [f.verbose_name for f in DadosPedidosPendentes._meta.fields]
         rows_pendentes = [
-            [getattr(o, f.name) for f in DadosPedidosPendentes._meta.fields]
+            [get_field_value(o, f) for f in DadosPedidosPendentes._meta.fields]
             for o in DadosPedidosPendentes.objects.all()
         ]
         headers_adiantados = [f.verbose_name for f in DadosPedidosAdiantados._meta.fields]
         rows_adiantados = [
-            [getattr(o, f.name) for f in DadosPedidosAdiantados._meta.fields]
+            [get_field_value(o, f) for f in DadosPedidosAdiantados._meta.fields]
             for o in DadosPedidosAdiantados.objects.all()
         ]
         headers_pagos = [f.verbose_name for f in DadosPedidosPagos._meta.fields]
         rows_pagos = [
-            [getattr(o, f.name) for f in DadosPedidosPagos._meta.fields]
+                [getattr(o, f.name) for f in DadosPedidosPagos._meta.fields]
             for o in DadosPedidosPagos.objects.all()
         ]
         return render(request, 'ics_app/home.html', {
@@ -194,10 +204,6 @@ def home(request: HttpRequest) -> HttpResponse:
 
     if main_tab in ['Projetos', 'Iniciativa'] and sub_tab.lower() in TAB_MODEL_MAP:
         Model = TAB_MODEL_MAP[sub_tab.lower()]
-        for field in Model._meta.fields:
-            if isinstance(field, DecimalField):
-                Model.objects.all().update(**{field.name: 0})
-
         qs = Model.objects.all()
 
         if main_tab == 'Projetos':
@@ -328,7 +334,7 @@ def home(request: HttpRequest) -> HttpResponse:
 
                 headers_aprovadas = [f.verbose_name for f in RdaAprovada._meta.fields]
                 rows_aprovadas    = [
-                    [getattr(item, f.name) for f in RdaAprovada._meta.fields]
+                    [get_field_value(item, f) for f in RdaAprovada._meta.fields]
                     for item in qs_aprovadas
                 ]
 
@@ -385,19 +391,33 @@ def home(request: HttpRequest) -> HttpResponse:
 
             elif sub_tab.lower() == 'dados_iniciativa':
                 qs_projetos = ProjetoIniciativa.objects.all().order_by('-ano_aprovacao')
-                headers_projetos = [f.verbose_name for f in ProjetoIniciativa._meta.fields]
-                rows_projetos    = [
-                    [getattr(item, f.name) for f in ProjetoIniciativa._meta.fields]
+                if iniciativa:
+                    qs_projetos = qs_projetos.filter(iniciativa__icontains=iniciativa)
+                if projetos_para_extracao:
+                    qs_projetos = qs_projetos.filter(
+                        projetos_para_extracao__icontains=projetos_para_extracao
+                    )
+                if ano_aprovacao:
+                    try:
+                        qs_projetos = qs_projetos.filter(
+                            ano_aprovacao=int(ano_aprovacao)
+                        )
+                    except ValueError:
+                        pass
+
+                headers_projetos = [
+                    f.verbose_name for f in ProjetoIniciativa._meta.fields
+                ]
+                rows_projetos = [
+                    [get_field_value(item, f) for f in ProjetoIniciativa._meta.fields]
                     for item in qs_projetos
                 ]
-                total_iniciativas = len(rows_projetos)
+                total_iniciativas = qs_projetos.count()
 
                 # --- conta quantos de cada status há na base ---
                 status_counts = {
                     d['status']: d['n']
-                    for d in ProjetoIniciativa.objects
-                        .values('status')
-                        .annotate(n=Count('status'))
+                    for d in qs_projetos.values('status').annotate(n=Count('status'))
                 }
 
                 count_AUT  = status_counts.get('AUT',  0)
@@ -455,6 +475,11 @@ def home(request: HttpRequest) -> HttpResponse:
                     proposto.append(val_proposto)
                     livre.append(val_livre)
 
+                pedidos_iniciativa = Pedido.objects.all()
+                if iniciativas_filtradas:
+                    pedidos_iniciativa = pedidos_iniciativa.filter(iniciativa__in=iniciativas_filtradas)
+                pedidos_iniciativa = pedidos_iniciativa.order_by('-data_documento')
+
                 # Recebe uma lista de iniciativas selecionadas
                 iniciativa_selecionada = request.GET.getlist('iniciativa')  # Agora retorna lista!
 
@@ -491,13 +516,16 @@ def home(request: HttpRequest) -> HttpResponse:
                     'provisao_fields': provisao_fields,
                     'total_provisoes': total_provisoes,
                     'valor_total_provisoes': valor_total_provisoes,
-                    
+                    'pedidos_iniciativa': pedidos_iniciativa,
                     'grafico_iniciativas_labels': labels,
                     'grafico_iniciativas_consumido': consumido,
                     'grafico_iniciativas_proposto': proposto,
                     'grafico_iniciativas_livre': livre,
                     'iniciativa_selecionada': iniciativa_selecionada,
                     'todas_iniciativas': todas_iniciativas,
+                    'iniciativa': iniciativa,
+                    'projetos_para_extracao': projetos_para_extracao,
+                    'ano_aprovacao': ano_aprovacao,
                 })
 
     # ------- SURVEY ---------
@@ -560,6 +588,16 @@ def iniciativas_dash(request):
         qs_projeto = qs_projeto.filter(iniciativa__in=iniciativas)
         qs_provisao = qs_provisao.filter(iniciativa__in=iniciativas)
 
+    if iniciativas:
+        pedidos_qs = Pedido.objects.filter(iniciativa__in=iniciativas)
+    else:
+        pedidos_qs = Pedido.objects.all()
+    pedidos = list(
+        pedidos_qs.order_by('iniciativa', 'doc_compra').values(
+            'iniciativa', 'doc_compra', 'razao_social', 'montante'
+        )
+    )
+
     total_iniciativas = qs_projeto.count()
     total_orcamento = qs_projeto.aggregate(total=Sum('orcamento'))['total'] or 0
     anos = list(
@@ -604,6 +642,7 @@ def iniciativas_dash(request):
         'grafico_iniciativas_consumido': json.dumps(consumido),
         'grafico_iniciativas_proposto': json.dumps(proposto),
         'grafico_iniciativas_livre': json.dumps(livre),
+        'pedidos_iniciativa': pedidos,
     }
 
     return render(request, 'ics_app/iniciativas_dash.html', context)
@@ -642,10 +681,6 @@ def dados_grafico_iniciativas(request):
         'proposto': proposto,
         'livre': livre,
     })
-
-
-
-
 
 
 @login_required(login_url='login')
@@ -762,7 +797,7 @@ def projetos_dashboard(request: HttpRequest) -> HttpResponse:
     # monta cabeçalhos e linhas a partir dos campos do modelo
     headers = [f.verbose_name for f in Projeto._meta.fields]
     rows    = [
-        [getattr(obj, f.name) for f in Projeto._meta.fields]
+        [get_field_value(obj, f) for f in Projeto._meta.fields]
         for obj in qs
     ]
 

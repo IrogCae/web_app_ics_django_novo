@@ -38,8 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('id_projeto').value = cells[2].innerText.trim();
           document.getElementById('id_iniciativa').value = cells[3].innerText.trim();
           document.getElementById('id_descricao').value = cells[4].innerText.trim();
+          document.getElementById('id_sap').value = cells[5].innerText.trim();
+          document.getElementById('id_fornecedor').value = cells[6].innerText.trim();
           // Remove R$ e pontos, troca vírgula por ponto para valor decimal
-          document.getElementById('id_provisao').value = cells[5].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+          document.getElementById('id_provisao').value =
+            cells[7].innerText.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
 
           // Mostra o botão Excluir (só em modo edição)
           if (btnExcluirProvisao) btnExcluirProvisao.style.display = '';
@@ -61,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('id_projeto').value = '';
           document.getElementById('id_iniciativa').value = '';
           document.getElementById('id_descricao').value = '';
+          document.getElementById('id_sap').value = '';
+          document.getElementById('id_fornecedor').value = '';
           document.getElementById('id_provisao').value = '';
         });
       }

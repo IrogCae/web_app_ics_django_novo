@@ -84,6 +84,36 @@
           Distribuição dos Valores por Iniciativa
         </h6>
         <canvas id="graficoIniciativasValores" style="height:auto !important; max-height:auto; width:90%;"></canvas>
+        <div class="table-responsive mt-4">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>RDA</th>
+                <th>Pedido</th>
+                <th>Data</th>
+                <th>Fornecedor</th>
+                <th>Preço Líq.</th>
+                <th>Valor Bruto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pedido in pedidos_iniciativa %}
+              <tr>
+                <td>{{ pedido.requisicao_compras }}</td>
+                <td>{{ pedido.doc_compra }}</td>
+                <td>{{ pedido.data_documento|date:"d/m/Y" }}</td>
+                <td>{{ pedido.razao_social }}</td>
+                <td>{{ pedido.preco_liquido|moeda_brasileira }}</td>
+                <td>{{ pedido.montante|moeda_brasileira }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center">Nenhum pedido encontrado.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

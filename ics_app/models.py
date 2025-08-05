@@ -53,9 +53,6 @@ class ProjetoIniciativa(models.Model):
     valor_total_pedidos_emitidos = models.DecimalField("Total Pedidos Emitidos",max_digits=14,decimal_places=2,blank=True,null=True)
     valor_total_pedidos_pagos   = models.DecimalField("Total Pedidos Pagos",max_digits=14,decimal_places=2,blank=True,null=True)
     provisao                    = models.CharField("Provisão",max_length=100,blank=True,null=True)
-    
-    
-    
 
 
     class Meta:

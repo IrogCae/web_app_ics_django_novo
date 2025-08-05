@@ -191,20 +191,23 @@
         <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
         <input type="hidden" name="main_tab" value="{{ main_tab }}">
         <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+        {% for ini in iniciativa_selecionada %}
+          <input type="hidden" name="iniciativa" value="{{ ini }}">
+        {% endfor %}
         <div class="form-group">
           <label class="form-label mb-0">Iniciativa</label>
-          <input name="numero_documento" class="form-control form-control-sm" type="text"
-             value="{{ request.GET.numero_documento }}" placeholder="Ex: 101500711">
+          <input name="iniciativa" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.iniciativa }}" placeholder="Ex: 101500711">
         </div>
         <div class="form-group">
-          <label class="form-label mb-0">Definição do projeto</label>
-          <input name="definicao_projeto" class="form-control form-control-sm" type="text"
-             value="{{ request.GET.definicao_projeto }}" placeholder="Ex: 251B90N_04P0_04P57Y">
+          <label class="form-label mb-0">Projeto</label>
+          <input name="projetos_para_extracao" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.projetos_para_extracao }}" placeholder="Ex: 251B90N_04P0_04P57Y">
         </div>
         <div class="form-group">
-          <label class="form-label mb-0">Elemento PEP</label>
-          <input name="elemento_pep" class="form-control form-control-sm" type="text"
-             value="{{ request.GET.elemento_pep }}" placeholder="Ex: 04P24047_AF_001">
+          <label class="form-label mb-0">Ano</label>
+          <input name="ano_aprovacao" class="form-control form-control-sm" type="text"
+             value="{{ request.GET.ano_aprovacao }}" placeholder="Ex: 2025 ">
         </div>
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
@@ -323,6 +326,9 @@
             <form method="get" class="mb-3 d-flex align-items-center gap-2">
               <input type="hidden" name="main_tab" value="{{ main_tab }}">
               <input type="hidden" name="sub_tab" value="{{ sub_tab }}">
+              <input type="hidden" name="numero_documento" value="{{ request.GET.numero_documento }}">
+              <input type="hidden" name="definicao_projeto" value="{{ request.GET.definicao_projeto }}">
+              <input type="hidden" name="elemento_pep" value="{{ request.GET.elemento_pep }}">
               <label for="iniciativa" class="form-label mb-0"><strong>Selecione a Iniciativa:</strong></label>
               <select name="iniciativa" id="iniciativa-select2" class="form-select form-select-sm" style="width:300px;">
                 <option value=""></option>
@@ -339,6 +345,32 @@
               </span>
             </form>
             <canvas id="graficoIniciativasValores" style="height:auto !important; max-height:auto; width:90%;"></canvas>
+            <div class="table-responsive mt-4">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>RDA</th>
+                    <th>Fornecedor</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for ped in pedidos_iniciativa %}
+                    <tr>
+                      <td>{{ ped.doc_compra }}</td>
+                      <td>{{ ped.requisicao_compras }}</td>
+                      <td>{{ ped.razao_social }}</td>
+                      <td>{{ ped.data_documento|date:"d/m/Y" }}</td>
+                      <td>{{ ped.montante|moeda_brasileira }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="5" class="text-center">Nenhum pedido encontrado.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
