@@ -6,11 +6,8 @@ from typing import Dict, List
 # NOVO BASE_DIR aponta para a raiz do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Diretório onde ficam TODOS os arquivos de Survey
-SURVEY_DIR = BASE_DIR / 'data'
 
 EXCEL_PATH: Dict[str, str] = {
-    "Survey": '',
     "Projetos": str(BASE_DIR / "data" / "PROJECT MANAGEMENTS.xlsx"),
 }
 

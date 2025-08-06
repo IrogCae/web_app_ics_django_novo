@@ -47,6 +47,13 @@ class Command(BaseCommand):
                     "october": row.get("october"),
                     "november": row.get("november"),
                     "december": row.get("december"),
+                    "annual_volume_2026": row.get("annual_volume_2026"),
+                    "weekly_peak_pico_semanal": row.get("weekly_peak_pico_semanal"),
+                    "status": row.get("status"),
+                    "currency": row.get("currency"),
+                    "investment_dolares": row.get("investment_dolares"),
+                    "investment_reais": row.get("investment_reais"),
+                    #"comments": row.get("comments"),
                 }
 
                 obj, created = SurveyBaseCompleta.objects.update_or_create(
