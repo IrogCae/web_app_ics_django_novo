@@ -9,16 +9,16 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, Count, Sum,  F, FloatField
 from django.core.management.base import BaseCommand
 from .models import (
-    RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
+    Survey, RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
     DadosPedidosPendentes, DadosPedidosAdiantados, DadosPedidosPagos,
     FollowupIniciativa, ProjetoIniciativa, ProvisaoGasto
 )
 from .forms import ProvisaoGastoForm, ProjetoIniciativaForm
 from .utils.config import EXCEL_PATH, ANALISTAS, RESPONSABILIDADES
 from .utils.data_processing import (
-    list_sheets, load_dataframe, load_all_surveys,
+    list_sheets, load_dataframe,
     filter_pleitos, filter_analista, df_to_html,
-    compute_survey_metrics, save_pleitos_dataframe,
+    save_pleitos_dataframe, save_pleitos_dataframe,
     filter_by_column, save_projetos_dataframe
 )
 from .utils.exceptions import DataProcessingError
@@ -49,7 +49,7 @@ def home(request: HttpRequest) -> HttpResponse:
     main_tabs = list(EXCEL_PATH.keys()) + ['Iniciativa']
     main_tab  = request.GET.get('main_tab', main_tabs[0])
     if main_tab == 'Survey':
-        sub_tabs = ['Data', 'Dash']
+        sub_tabs = ['Surveys Enviadas']
     elif main_tab == 'Projetos':
         sub_tabs = ['pleitos', 'projetos']
     elif main_tab == 'Iniciativa':
@@ -548,8 +548,35 @@ def home(request: HttpRequest) -> HttpResponse:
                     'rows_pedidos_iniciativa': rows_pedidos_iniciativa,
                 })
 
-    # ------- SURVEY ---------
+    # ------- SURVEY (Surveys Enviadas) ---------
+    if main_tab == 'Survey' and sub_tab == 'Surveys Enviadas':
+        headers_survey = [f.verbose_name for f in Survey._meta.fields]
+        rows_base_completa = [
+            [getattr(obj, f.name) for f in Survey._meta.fields]
+            for obj in Survey.objects.all()
+        ]
+        rows_base_verificar = [
+            [getattr(obj, f.name) for f in Survey._meta.fields]
+            for obj in Survey.objects.filter(sap_code__isnull=True)
+        ]
+        rows_base_ok = [
+            [getattr(obj, f.name) for f in Survey._meta.fields]
+            for obj in Survey.objects.filter(sap_code__isnull=False)
+        ]
+        return render(request, 'ics_app/home.html', {
+            'main_tabs': main_tabs,
+            'main_tab': main_tab,
+            'sub_tabs': sub_tabs,
+            'sub_tab': sub_tab,
+            'headers_base_completa': headers_survey,
+            'rows_base_completa': rows_base_completa,
+            'headers_base_verificar': headers_survey,
+            'rows_base_verificar': rows_base_verificar,
+            'headers_base_ok': headers_survey,
+            'rows_base_ok': rows_base_ok,
+        })
     
+    # ------- DEFAULT DATAFRAME ---------    
     context = {
         'main_tabs': main_tabs, 'main_tab': main_tab,
         'sub_tabs': sub_tabs, 'sub_tab': sub_tab,
@@ -563,34 +590,22 @@ def home(request: HttpRequest) -> HttpResponse:
         'df_html': None, 'error': None,
     }
     try:
-        if main_tab == 'Survey' and sub_tab == 'Dash':
-            df_survey = load_all_surveys()
-            n, codes, rates = compute_survey_metrics(df_survey)
-            context.update({
-                'n_surveys': n,
-                'survey_codes_json': codes,
-                'response_rates_json': rates,
-            })
-        elif main_tab == 'Survey' and sub_tab == 'Data':
-            df_all = load_all_surveys()
-            context['df_html'] = df_to_html(df_all)
-        else:
-            df = load_dataframe(main_tab, sub_tab)
-            if sub_tab.lower() == 'pleitos':
-                df = filter_pleitos(df, id_pleito)
-                df = filter_analista(df, analista)
-                df = filter_by_column(df, 'DATA PLEITO', data_pleito)
-                df = filter_by_column(df, 'ID INICIATIVA', id_iniciativa)
-                df = filter_by_column(df, 'FORNECEDOR SOLICITADO', fornecedor_solicitado)
-                df = filter_by_column(df, 'SAP SUPPLIER', sap_supplier)
-            elif sub_tab.lower() == 'projetos':
-                df = filter_by_column(df, 'GERADOR ID PROJETO', id_projeto)
-                df = filter_by_column(df, 'PLANTA', planta)
-                df = filter_by_column(df, 'ID INICIATIVA', id_iniciativa)
-                df = filter_by_column(df, 'ANALISTA', analista)
-                df = filter_by_column(df, 'FORNECEDOR', fornecedor_solicitado)
-                df = filter_by_column(df, 'SAP', sap_supplier)
-            context['df_html'] = df_to_html(df)
+        df = load_dataframe(main_tab, sub_tab)
+        if sub_tab.lower() == 'pleitos':
+            df = filter_pleitos(df, id_pleito)
+            df = filter_analista(df, analista)
+            df = filter_by_column(df, 'DATA PLEITO', data_pleito)
+            df = filter_by_column(df, 'ID INICIATIVA', id_iniciativa)
+            df = filter_by_column(df, 'FORNECEDOR SOLICITADO', fornecedor_solicitado)
+            df = filter_by_column(df, 'SAP SUPPLIER', sap_supplier)
+        elif sub_tab.lower() == 'projetos':
+            df = filter_by_column(df, 'GERADOR ID PROJETO', id_projeto)
+            df = filter_by_column(df, 'PLANTA', planta)
+            df = filter_by_column(df, 'ID INICIATIVA', id_iniciativa)
+            df = filter_by_column(df, 'ANALISTA', analista)
+            df = filter_by_column(df, 'FORNECEDOR', fornecedor_solicitado)
+            df = filter_by_column(df, 'SAP', sap_supplier)
+        context['df_html'] = df_to_html(df)
     except DataProcessingError as e:
         logger.error("Erro ao processar dados: %s", e)
         context['error'] = str(e)

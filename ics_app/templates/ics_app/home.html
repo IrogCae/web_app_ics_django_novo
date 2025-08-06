@@ -33,6 +33,98 @@
       {% endfor %}
     </ul>
 
+    <!-- ======================= Survey Section ======================= -->
+    {% if main_tab == 'Survey' and sub_tab == 'Surveys Enviadas' %}
+
+      <!-- === BANNER BASE COMPLETA === -->
+      <div class="text-center py-1 mb-1"
+           style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+                  line-height: 1.1; border-radius: 0.5rem;">
+        BASE COMPLETA
+      </div>
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem; margin-bottom:1cm;">
+        <table class="table table-sm table-hover mb-4">
+          <thead class="table-light">
+            <tr>
+              {% for h in headers_base_completa %}
+                <th class="align-middle text-nowrap">{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows_base_completa %}
+              <tr>
+                {% for cell in row %}
+                  <td class="text-center text-nowrap">{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr><td colspan="{{ headers_base_completa|length }}">Nenhum registro encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- === BANNER BASE VERIFICAR PLEITO === -->
+      <div class="text-center py-1 mb-1"
+           style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+                  line-height: 1.1; border-radius: 0.5rem;">
+        BASE VERIFICAR PLEITO
+      </div>
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem; margin-bottom:1cm;">
+        <table class="table table-sm table-hover mb-4">
+          <thead class="table-light">
+            <tr>
+              {% for h in headers_base_verificar %}
+                <th class="align-middle text-nowrap">{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows_base_verificar %}
+              <tr>
+                {% for cell in row %}
+                  <td class="text-center text-nowrap">{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr><td colspan="{{ headers_base_verificar|length }}">Nenhum registro encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- === BANNER BASE OK === -->
+      <div class="text-center py-1 mb-1"
+           style="background-color: #123c5c; color: white; font-weight: bold; font-size: 1.0rem;
+                  line-height: 1.1; border-radius: 0.5rem;">
+        BASE OK
+      </div>
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem;">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              {% for h in headers_base_ok %}
+                <th class="align-middle text-nowrap">{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows_base_ok %}
+              <tr>
+                {% for cell in row %}
+                  <td class="text-center text-nowrap">{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr><td colspan="{{ headers_base_ok|length }}">Nenhum registro encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% endif %}
+
     <!-- ======================= Iniciativa Section ======================= -->
     {% if main_tab == 'Iniciativa' %}
 
