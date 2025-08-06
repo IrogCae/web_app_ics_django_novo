@@ -151,7 +151,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # diretório “raw data”
 DATA_ROOT = BASE_DIR / "data"
-DADOS_SURVEY_PATH = DATA_ROOT / "survey_export.xlsx"
+DADOS_SURVEY_BASE_COMPLETA_PATH = DATA_ROOT / "survey_export_base_completa.xlsx"
+DADOS_SURVEY_BASE_EXCLUIDOS_PATH = DATA_ROOT / "survey_export_excluidos.xlsx"
+DADOS_SURVEY_BASE_VERIFICAR_PATH = DATA_ROOT / "survey_export_verificar.xlsx"
 BASE_COMPLETA_INICIATIVA_PATH = DATA_ROOT / "base_completa_iniciativa.xlsx"
 DADOS_PEDIDOS_AQ_PATH = DATA_ROOT / "dados_pedidos_aq.xlsx"
 DADOS_PEDIDOS_ADIANTADOS_PATH = DATA_ROOT / "dados_pedidos_adiantados.xlsx"

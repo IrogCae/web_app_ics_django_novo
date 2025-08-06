@@ -11,7 +11,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        df = pd.read_excel(settings.DADOS_SURVEY_PATH)
+        df = pd.read_excel(settings.DADOS_SURVEY_BASE_VERIFICAR_PATH)
         df = df[df['sap_code'].isna()]
         if "date_answer" in df.columns:
             df["date_answer"] = pd.to_datetime(
@@ -34,6 +34,18 @@ class Command(BaseCommand):
                     "company": row.get("company"),
                     "partnumber": row.get("partnumber"),
                     "description": row.get("description"),
+                    "january": row.get("january"),
+                    "february": row.get("february"),
+                    "march": row.get("march"),
+                    "april": row.get("april"),
+                    "may": row.get("may"),
+                    "june": row.get("june"),
+                    "july": row.get("july"),
+                    "august": row.get("august"),
+                    "september": row.get("september"),
+                    "october": row.get("october"),
+                    "november": row.get("november"),
+                    "december": row.get("december"),
                 }
                 obj, created = SurveyBaseVerificarPleito.objects.update_or_create(
                     survey_code=survey_code,

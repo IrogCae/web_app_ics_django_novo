@@ -6,36 +6,56 @@ from django.utils import timezone as dj_timezone
 class BaseSurvey(models.Model):
     """Campos compartilhados entre todas as bases de Survey."""
 
-    survey_code  = models.IntegerField("Survey Code", blank=True, null=True)
-    sap_code     = models.IntegerField("SAP Code", blank=True, null=True)
-    supplier     = models.CharField("Supplier", max_length=100, blank=True, null=True)
-    version      = models.IntegerField("Version", blank=True, null=True)
-    user_name    = models.CharField("User Name", max_length=100, blank=True, null=True)
-    date_answer  = models.DateField("Date Answer", blank=True, null=True)
-    company      = models.CharField("Company", max_length=100, blank=True, null=True)
-    partnumber   = models.CharField("Part Number", max_length=100, blank=True, null=True)
-    description  = models.TextField("Description", blank=True, null=True)
+    survey_code  = models.IntegerField  ("Survey Code", blank=True, null=True)
+    sap_code     = models.IntegerField  ("SAP Code", blank=True, null=True)
+    supplier     = models.CharField     ("Supplier", max_length=100, blank=True, null=True)
+    version      = models.IntegerField  ("Version", blank=True, null=True)
+    user_name    = models.CharField     ("User Name", max_length=100, blank=True, null=True)
+    date_answer  = models.DateField     ("Date Answer", blank=True, null=True)
+    company      = models.CharField     ("Company", max_length=100, blank=True, null=True)
+    partnumber   = models.CharField     ("Part Number", max_length=100, blank=True, null=True)
+    description  = models.TextField     ("Description", blank=True, null=True)
+    january	     = models.IntegerField  ("January", blank=True, null=True)
+    february	 = models.IntegerField  ("February", blank=True, null=True)
+    march	     = models.IntegerField  ("March", blank=True, null=True)
+    april	     = models.IntegerField  ("April", blank=True, null=True)
+    may	         = models.IntegerField  ("May", blank=True, null=True)
+    june	     = models.IntegerField  ("June", blank=True, null=True)
+    july	     = models.IntegerField  ("July", blank=True, null=True)
+    august	     = models.IntegerField  ("August", blank=True, null=True)
+    september	 = models.IntegerField  ("September", blank=True, null=True)
+    october	     = models.IntegerField  ("October", blank=True, null=True)
+    november	 = models.IntegerField  ("November", blank=True, null=True)
+    december	 = models.IntegerField  ("December", blank=True, null=True)
+    annual_volume_2026 = models.IntegerField  ("Annual Volume(s) 2026", blank=True, null=True)
+    weekly_peak_pico_semanal = models.IntegerField  ("Weekly Peak (Pico Semanal)", blank=True, null=True)
+    status	    = models.CharField      ("Status", max_length=100, blank=True, null=True)
+    investment   = models.DecimalField  ("Investment", max_digits=15, decimal_places=2, blank=True, null=True)
+    currency	  = models.CharField    ("Currency", max_length=10, blank=True, null=True)
+    investment_dolares = models.DecimalField  ("Investment($)", max_digits=15, decimal_places=2, blank=True, null=True)
+    investment_reais    = models.DecimalField ("Investment Reais (R$)", max_digits=15, decimal_places=2, blank=True, null=True)
+
 
     class Meta:
         abstract = True
 
 
 class SurveyBaseCompleta(BaseSurvey):
-    class Meta:
+    class Meta(BaseSurvey.Meta):  
         db_table = 'survey_base_completa'
         verbose_name = 'Base Completa'
         verbose_name_plural = 'Bases Completas'
 
 
 class SurveyBaseVerificarPleito(BaseSurvey):
-    class Meta:
+    class Meta(BaseSurvey.Meta):  
         db_table = 'survey_base_verificar_pleito'
         verbose_name = 'Base Verificar Pleito'
         verbose_name_plural = 'Bases Verificar Pleito'
 
 
 class SurveyBaseOk(BaseSurvey):
-    class Meta:
+    class Meta(BaseSurvey.Meta):  
         db_table = 'survey_base_ok'
         verbose_name = 'Base OK'
         verbose_name_plural = 'Bases OK'

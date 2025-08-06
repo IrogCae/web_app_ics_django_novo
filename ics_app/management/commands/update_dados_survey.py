@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        df = pd.read_excel(settings.DADOS_SURVEY_PATH)
+        df = pd.read_excel(settings.DADOS_SURVEY_BASE_COMPLETA_PATH)
 
         if "date_answer" in df.columns:
             df["date_answer"] = pd.to_datetime(
@@ -29,12 +29,24 @@ class Command(BaseCommand):
                 sap_code = row.get("sap_code")
                 version = row.get("version")
                 defaults = {
-                    "supplier":    row.get("supplier"),
-                    "user_name":   row.get("user_name"),
+                    "supplier": row.get("supplier"),
+                    "user_name": row.get("user_name"),
                     "date_answer": row.get("date_answer"),
-                    "company":     row.get("company"),
-                    "partnumber":  row.get("partnumber"),
+                    "company": row.get("company"),
+                    "partnumber": row.get("partnumber"),
                     "description": row.get("description"),
+                    "january": row.get("january"),
+                    "february": row.get("february"),
+                    "march": row.get("march"),
+                    "april": row.get("april"),
+                    "may": row.get("may"),
+                    "june": row.get("june"),
+                    "july": row.get("july"),
+                    "august": row.get("august"),
+                    "september": row.get("september"),
+                    "october": row.get("october"),
+                    "november": row.get("november"),
+                    "december": row.get("december"),
                 }
 
                 obj, created = SurveyBaseCompleta.objects.update_or_create(

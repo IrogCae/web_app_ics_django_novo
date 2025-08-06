@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, Count, Sum,  F, FloatField
 from django.core.management.base import BaseCommand
 from .models import (
-    SurveyBaseCompleta, RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
+    SurveyBaseCompleta, SurveyBaseVerificarPleito, SurveyBaseOk,
+    RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
     DadosPedidosPendentes, DadosPedidosAdiantados, DadosPedidosPagos,
     FollowupIniciativa, ProjetoIniciativa, ProvisaoGasto
 )
@@ -550,33 +551,47 @@ def home(request: HttpRequest) -> HttpResponse:
 
     # ------- SURVEY (Surveys Enviadas) ---------
     if main_tab == 'Survey' and sub_tab == 'Surveys Enviadas':
-        headers_survey = [f.verbose_name for f in Survey._meta.fields]
+        headers_base_completa = [
+            f.verbose_name for f in SurveyBaseCompleta._meta.fields
+        ]
         rows_base_completa = [
-            [getattr(obj, f.name) for f in Survey._meta.fields]
-            for obj in Survey.objects.all()
+            [getattr(obj, f.name) for f in SurveyBaseCompleta._meta.fields]
+            for obj in SurveyBaseCompleta.objects.all()
+        ]
+    
+        headers_base_verificar = [
+            f.verbose_name for f in SurveyBaseVerificarPleito._meta.fields
         ]
         rows_base_verificar = [
-            [getattr(obj, f.name) for f in Survey._meta.fields]
-            for obj in Survey.objects.filter(sap_code__isnull=True)
+            [
+                getattr(obj, f.name)
+                for f in SurveyBaseVerificarPleito._meta.fields
+            ]
+            for obj in SurveyBaseVerificarPleito.objects.all()
+        ]
+
+        headers_base_ok = [
+            f.verbose_name for f in SurveyBaseOk._meta.fields
         ]
         rows_base_ok = [
-            [getattr(obj, f.name) for f in Survey._meta.fields]
-            for obj in Survey.objects.filter(sap_code__isnull=False)
+            [getattr(obj, f.name) for f in SurveyBaseOk._meta.fields]
+            for obj in SurveyBaseOk.objects.all()
         ]
+
         return render(request, 'ics_app/home.html', {
             'main_tabs': main_tabs,
             'main_tab': main_tab,
             'sub_tabs': sub_tabs,
             'sub_tab': sub_tab,
-            'headers_base_completa': headers_survey,
+            'headers_base_completa': headers_base_completa,
             'rows_base_completa': rows_base_completa,
-            'headers_base_verificar': headers_survey,
+            'headers_base_verificar': headers_base_verificar,
             'rows_base_verificar': rows_base_verificar,
-            'headers_base_ok': headers_survey,
+            'headers_base_ok': headers_base_ok,
             'rows_base_ok': rows_base_ok,
         })
-    
-    # ------- DEFAULT DATAFRAME ---------    
+
+    # ------- DEFAULT DATAFRAME ---------
     context = {
         'main_tabs': main_tabs, 'main_tab': main_tab,
         'sub_tabs': sub_tabs, 'sub_tab': sub_tab,
@@ -606,6 +621,7 @@ def home(request: HttpRequest) -> HttpResponse:
             df = filter_by_column(df, 'FORNECEDOR', fornecedor_solicitado)
             df = filter_by_column(df, 'SAP', sap_supplier)
         context['df_html'] = df_to_html(df)
+        
     except DataProcessingError as e:
         logger.error("Erro ao processar dados: %s", e)
         context['error'] = str(e)
