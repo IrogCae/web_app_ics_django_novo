@@ -345,28 +345,34 @@
               </span>
             </form>
             <canvas id="graficoIniciativasValores" style="height:auto !important; max-height:auto; width:90%;"></canvas>
-            <div class="table-responsive mt-4">
-              <table class="table table-sm table-hover">
-                <thead>
+            <div class="table-responsive mt-4" style="font-size:0.75rem;line-height:1.2;">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
                   <tr>
-                    <th>Pedido</th>
-                    <th>RDA</th>
-                    <th>Fornecedor</th>
-                    <th>Data</th>
-                    <th>Valor</th>
+                    {% for h in headers_pedidos_iniciativa %}
+                      <th class="align-middle">{{ h }}</th>
+                    {% endfor %}
                   </tr>
                 </thead>
                 <tbody>
-                  {% for ped in pedidos_iniciativa %}
+                  {% for row in rows_pedidos_iniciativa %}
                     <tr>
-                      <td>{{ ped.doc_compra }}</td>
-                      <td>{{ ped.requisicao_compras }}</td>
-                      <td>{{ ped.razao_social }}</td>
-                      <td>{{ ped.data_documento|date:"d/m/Y" }}</td>
-                      <td>{{ ped.montante|moeda_brasileira }}</td>
+                      {% for cell in row %}
+                        <td class="text-center">
+                          {% if forloop.counter0 == 3 %}
+                            {{ cell|date:"d/m/Y" }}
+                          {% elif forloop.counter0 == 4 %}
+                            {{ cell|moeda_brasileira }}
+                          {% else %}
+                            {{ cell }}
+                          {% endif %}
+                        </td>
+                      {% endfor %}
                     </tr>
                   {% empty %}
-                    <tr><td colspan="5" class="text-center">Nenhum pedido encontrado.</td></tr>
+                    <tr>
+                      <td colspan="{{ headers_pedidos_iniciativa|length }}" class="text-center">Nenhum pedido encontrado.</td>
+                    </tr>
                   {% endfor %}
                 </tbody>
               </table>

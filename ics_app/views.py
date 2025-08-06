@@ -483,6 +483,24 @@ def home(request: HttpRequest) -> HttpResponse:
                 # Recebe uma lista de iniciativas selecionadas
                 iniciativa_selecionada = request.GET.getlist('iniciativa')  # Agora retorna lista!
 
+                # Tabela de pedidos vinculados às iniciativas selecionadas
+                pedido_fields = [
+                    'doc_compra',
+                    'requisicao_compras',
+                    'razao_social',
+                    'data_documento',
+                    'montante',
+                ]
+                qs_pedidos = Pedido.objects.all()
+                if iniciativa_selecionada:
+                    qs_pedidos = qs_pedidos.filter(iniciativa__in=iniciativa_selecionada)
+                headers_pedidos_iniciativa = [
+                    Pedido._meta.get_field(f).verbose_name for f in pedido_fields  # type: ignore[reportAttributeAccessIssue]
+                ]
+                rows_pedidos_iniciativa = [
+                    [getattr(p, f) for f in pedido_fields] for p in qs_pedidos
+                ]
+
                 return render(request, 'ics_app/home.html', {
                     'main_tabs': main_tabs,
                     'main_tab': main_tab,
@@ -526,6 +544,8 @@ def home(request: HttpRequest) -> HttpResponse:
                     'iniciativa': iniciativa,
                     'projetos_para_extracao': projetos_para_extracao,
                     'ano_aprovacao': ano_aprovacao,
+                    'headers_pedidos_iniciativa': headers_pedidos_iniciativa,
+                    'rows_pedidos_iniciativa': rows_pedidos_iniciativa,
                 })
 
     # ------- SURVEY ---------
