@@ -8,7 +8,8 @@ import json
 import numpy as np
 import pandas as pd
 
-from .config import EXCEL_PATH, IGNORE_SHEETS, HEADER_MAP, SURVEY_DIR
+from django.conf import settings
+from .config import EXCEL_PATH, IGNORE_SHEETS, HEADER_MAP
 from .exceptions import DataProcessingError
 from ics_app.models import RdaSemPedido
 
@@ -170,17 +171,22 @@ def compute_survey_metrics(df_survey: pd.DataFrame) -> Tuple[int, str, str]:
 
 
 def list_survey_files() -> List[str]:
-    """Retorna caminhos de todos os .xls[x] em SURVEY_DIR."""
-    files = []
-    for fname in os.listdir(SURVEY_DIR):
+    """
+    Retorna caminhos de todos os .xls[x] no diretório definido por
+    ``settings.DADOS_SURVEY_BASE_VERIFICAR_PATH``.
+    """
+    survey_dir = Path(settings.DADOS_SURVEY_BASE_VERIFICAR_PATH)
+    files: List[str] = []
+    for fname in os.listdir(survey_dir):
         if fname.lower().endswith(('.xls', '.xlsx')):
-            files.append(str(SURVEY_DIR / fname))
+            files.append(str(survey_dir / fname))
     return files
 
 
 def load_all_surveys() -> pd.DataFrame:
     """
-    Lê e concatena cada Excel em SURVEY_DIR,
+    Lê e concatena cada Excel no diretório configurado em
+    ``settings.DADOS_SURVEY_BASE_VERIFICAR_PATH``,
     adiciona coluna 'survey_file' com o nome do arquivo.
     """
     dfs = []

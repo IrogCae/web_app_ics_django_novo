@@ -108,6 +108,12 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # depois o padrão, se necessário
 ]
 
+
+# Caminho para a base de dados das Surveys usada na atualização da base de verificação.
+DADOS_SURVEY_BASE_VERIFICAR_PATH = os.path.join(
+    BASE_DIR, 'ics_app', 'data', 'survey'
+)
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

@@ -2,10 +2,13 @@
 
 from pathlib import Path
 from typing import Dict, List
+from django.conf import settings
 
 # NOVO BASE_DIR aponta para a raiz do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# Diretório onde ficam TODOS os arquivos de Survey
+SURVEY_DIR = Path(settings.DADOS_SURVEY_BASE_VERIFICAR_PATH)
 
 EXCEL_PATH: Dict[str, str] = {
     "Projetos": str(BASE_DIR / "data" / "PROJECT MANAGEMENTS.xlsx"),
