@@ -2,18 +2,17 @@ import pandas as pd
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db import transaction
-from ics_app.models import SurveyBaseCompleta
+from ics_app.models import SurveyBaseVerificarPleito
 
 class Command(BaseCommand):
     help = (
-        "Importa survey_export.xlsx para a tabela de Base Completa, "
-        "atualizando registros existentes ou criando novos."
+        "Importa survey_export.xlsx filtrando registros sem SAP Code "
+        "para a Base Verificar Pleito."
     )
 
     def handle(self, *args, **options):
-
         df = pd.read_excel(settings.DADOS_SURVEY_PATH)
-
+        df = df[df['sap_code'].isna()]
         if "date_answer" in df.columns:
             df["date_answer"] = pd.to_datetime(
                 df["date_answer"], dayfirst=True, errors="coerce"
@@ -29,21 +28,19 @@ class Command(BaseCommand):
                 sap_code = row.get("sap_code")
                 version = row.get("version")
                 defaults = {
-                    "supplier":    row.get("supplier"),
-                    "user_name":   row.get("user_name"),
+                    "supplier": row.get("supplier"),
+                    "user_name": row.get("user_name"),
                     "date_answer": row.get("date_answer"),
-                    "company":     row.get("company"),
-                    "partnumber":  row.get("partnumber"),
+                    "company": row.get("company"),
+                    "partnumber": row.get("partnumber"),
                     "description": row.get("description"),
                 }
-
-                obj, created = SurveyBaseCompleta.objects.update_or_create(
+                obj, created = SurveyBaseVerificarPleito.objects.update_or_create(
                     survey_code=survey_code,
                     sap_code=sap_code,
                     version=version,
-                    defaults=defaults
+                    defaults=defaults,
                 )
-
                 total += 1
                 if created:
                     total_created += 1

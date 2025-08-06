@@ -3,21 +3,43 @@ from django.conf import settings
 from datetime import datetime, time, timezone, timedelta, date
 from django.utils import timezone as dj_timezone
 
-class Survey(models.Model):
-    survey_code     = models.IntegerField("Survey Code", blank=True, null=True)
-    sap_code        = models.IntegerField("SAP Code", blank=True, null=True)
-    supplier        = models.CharField("Supplier", max_length=100,  blank=True, null=True)
-    version         = models.IntegerField("Version", blank=True, null=True)
-    user_name      = models.CharField("User Name", max_length=100, blank=True, null=True)
-    date_answer    = models.DateField("Date Answer", blank=True, null=True)
-    company        = models.CharField("Company", max_length=100, blank=True, null=True)
-    partnumber     = models.CharField("Part Number", max_length=100, blank=True, null=True)
-    description    = models.TextField("Description", blank=True, null=True)
+class BaseSurvey(models.Model):
+    """Campos compartilhados entre todas as bases de Survey."""
+
+    survey_code  = models.IntegerField("Survey Code", blank=True, null=True)
+    sap_code     = models.IntegerField("SAP Code", blank=True, null=True)
+    supplier     = models.CharField("Supplier", max_length=100, blank=True, null=True)
+    version      = models.IntegerField("Version", blank=True, null=True)
+    user_name    = models.CharField("User Name", max_length=100, blank=True, null=True)
+    date_answer  = models.DateField("Date Answer", blank=True, null=True)
+    company      = models.CharField("Company", max_length=100, blank=True, null=True)
+    partnumber   = models.CharField("Part Number", max_length=100, blank=True, null=True)
+    description  = models.TextField("Description", blank=True, null=True)
 
     class Meta:
-        db_table = 'dados_survey'
-        verbose_name = 'Base Survey'
-        verbose_name_plural = 'Bases Surveys'
+        abstract = True
+
+
+class SurveyBaseCompleta(BaseSurvey):
+    class Meta:
+        db_table = 'survey_base_completa'
+        verbose_name = 'Base Completa'
+        verbose_name_plural = 'Bases Completas'
+
+
+class SurveyBaseVerificarPleito(BaseSurvey):
+    class Meta:
+        db_table = 'survey_base_verificar_pleito'
+        verbose_name = 'Base Verificar Pleito'
+        verbose_name_plural = 'Bases Verificar Pleito'
+
+
+class SurveyBaseOk(BaseSurvey):
+    class Meta:
+        db_table = 'survey_base_ok'
+        verbose_name = 'Base OK'
+        verbose_name_plural = 'Bases OK'
+
 
 
 class ProvisaoGasto(models.Model):

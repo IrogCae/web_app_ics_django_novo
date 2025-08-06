@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, Count, Sum,  F, FloatField
 from django.core.management.base import BaseCommand
 from .models import (
-    Survey, RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
+    SurveyBaseCompleta, RdaAprovada, RdaSemPedido, Projeto, Pleito, Pedido,
     DadosPedidosPendentes, DadosPedidosAdiantados, DadosPedidosPagos,
     FollowupIniciativa, ProjetoIniciativa, ProvisaoGasto
 )
