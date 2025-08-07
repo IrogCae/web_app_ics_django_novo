@@ -11,7 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SURVEY_DIR = Path(settings.DADOS_SURVEY_BASE_VERIFICAR_PATH)
 
 EXCEL_PATH: Dict[str, str] = {
+    "Survey": "",  # utilizado apenas para exibir a aba de Survey
     "Projetos": str(BASE_DIR / "data" / "PROJECT MANAGEMENTS.xlsx"),
+    
 }
 
 IGNORE_SHEETS: List[str] = [
