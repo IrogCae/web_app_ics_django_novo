@@ -898,29 +898,34 @@
       <!-- Linhas com valores e cálculos dos PEDIDOS PENDENTES -->
       <div class="d-flex justify-content-center gap-2 my-1">
         <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
-        <div style="font-size: 0.75rem;">
-          <span class=" fw-bold text-muted">Total:</span> <strong>{{ total_pedidos_pendestes }}</strong>
-        </div>
-        </div>
-        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
-        <div style="font-size: 0.75rem;">
-          <span class="fw-bold text-muted">Pagamento no prazo:</span> <strong class="text-success">{{ pedidos_pendentes_no_prazo }}</strong>
-        </div>
+          <div style="font-size: 0.75rem;">
+            <span class="fw-bold text-muted">Total:</span>
+            <strong>{{ total_pedidos_pendentes }}</strong>
+          </div>
         </div>
         <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
-        <div style="font-size: 0.75rem;">
-          <span class="fw-bold text-muted">Pagamento fora do prazo:</span> <strong class="text-danger">{{ pedidos_pendentes_fora_prazo }}</strong>
+          <div style="font-size: 0.75rem;">
+            <span class="fw-bold text-muted">Pagamento no prazo:</span>
+            <strong class="text-success">{{ pedidos_pendentes_no_prazo }}</strong>
+          </div>
         </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+          <div style="font-size: 0.75rem;">
+            <span class="fw-bold text-muted">Pagamento fora do prazo:</span>
+            <strong class="text-danger">{{ pedidos_pendentes_fora_prazo }}</strong>
+          </div>
         </div>
-        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;"></div>
-        <div style="font-size: 0.75rem;"></div>
-          <span class="fw-bold text-muted">% Pago no prazo:</span> <strong class="text-danger">{{ perc_pedidos_pendentes_no_prazo}}</strong>
-        </div>
+        <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+          <div style="font-size: 0.75rem;">
+            <span class="fw-bold text-muted">% Pago no prazo:</span>
+            <strong class="text-danger">{{ perc_pedidos_pendentes_no_prazo }}</strong>
+          </div>
         </div>
         <div class="card p-1 text-center shadow-sm" style="width: 140px; height: auto;">
-        <div style="font-size: 0.75rem;">
-          <span class="fw-bold text-muted">Pedido c/ erro:</span> <strong class="text-danger">{{ pedido_com_erro_pendente }}</strong>
-        </div>
+          <div style="font-size: 0.75rem;">
+            <span class="fw-bold text-muted">Pedido c/ erro:</span>
+            <strong class="text-danger">{{ pedido_com_erro_pendente }}</strong>
+          </div>
         </div>
       </div>
 
@@ -936,7 +941,7 @@
             </thead>
             <tbody>
               {% for row in rows_pendentes %}
-                <tr>
+                <tr class="row-selectable" data-id="{{ row.0 }}">
                   {% for cell in row %}
                     {% if forloop.counter0 == 1 %}
                       <td class="text-center">{{ cell|remover_decimal }}</td>
@@ -990,8 +995,42 @@
           PEDIDOS ADIANTADOS
         </div>
 
+        <!-- Linhas com valores e cálculos dos PEDIDOS ADIANTADOS -->
+        <div class="d-flex justify-content-center gap-2 my-1">
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Total:</span>
+              <strong>{{ total_pedidos_adiantados }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Pagamento no prazo:</span>
+              <strong class="text-success">{{ pedidos_adiantados_no_prazo }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Pagamento fora do prazo:</span>
+              <strong class="text-danger">{{ pedidos_adiantados_fora_prazo }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">% Pago no prazo:</span>
+              <strong class="text-danger">{{ perc_pedidos_adiantados_no_prazo }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: 140px; height: auto;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Pedido c/ erro:</span>
+              <strong class="text-danger">{{ pedido_com_erro_adiantado }}</strong>
+            </div>
+          </div>
+        </div>
+
         <!-- TABELA PEDIDOS ADIANTADOS -->
-        <div class="table-responsive" 
+        <div class="table-responsive"
               style="max-height:300px; overflow-y:auto; font-size:0.75rem; line-height:1.2; border:1px solid #ddd; padding:.5rem; margin-bottom:1cm;">
           <table class="table table-sm table-hover mb-4">
             <thead class="table-light">
@@ -1003,7 +1042,7 @@
             </thead>
             <tbody>
               {% for row in rows_adiantados %}
-                <tr>
+                <tr class="row-selectable" data-id="{{ row.0 }}">
                   {% for cell in row %}
                     <td class="text-center text-nowrap">{{ cell }}</td>
                   {% endfor %}
@@ -1048,6 +1087,41 @@
                     line-height: 1.1; border-radius: 0.5rem;">
           PEDIDOS PAGOS
         </div>
+
+        <!-- Linhas com valores e cálculos dos PEDIDOS PAGOS -->
+        <div class="d-flex justify-content-center gap-2 my-1">
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Total:</span>
+              <strong>{{ total_pedidos_pagos }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Pagamento no prazo:</span>
+              <strong class="text-success">{{ pedidos_pagos_no_prazo }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Pagamento fora do prazo:</span>
+              <strong class="text-danger">{{ pedidos_pagos_fora_prazo }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: auto; height: auto; min-width: 120px;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">% Pago no prazo:</span>
+              <strong class="text-danger">{{ perc_pedidos_pagos_no_prazo }}</strong>
+            </div>
+          </div>
+          <div class="card p-1 text-center shadow-sm" style="width: 140px; height: auto;">
+            <div style="font-size: 0.75rem;">
+              <span class="fw-bold text-muted">Pedido c/ erro:</span>
+              <strong class="text-danger">{{ pedido_com_erro_pago }}</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="table-responsive" style="max-height:300px; overflow-y:auto;
                                              font-size:0.75rem; line-height:1.2;
                                              border:1px solid #ddd; padding:.5rem;">
@@ -1061,7 +1135,7 @@
             </thead>
             <tbody>
               {% for row in rows_pagos %}
-                <tr>
+                <tr class="row-selectable" data-id="{{ row.0 }}">
                   {% for cell in row %}
                     <td class="text-center text-nowrap">{{ cell }}</td>
                   {% endfor %}

@@ -153,21 +153,58 @@ def home(request: HttpRequest) -> HttpResponse:
         return redirect(f"{request.path}?main_tab=Iniciativa&sub_tab=pedidos")
 
     if main_tab == 'Iniciativa' and sub_tab == 'pedidos':
+        qs_pendentes = DadosPedidosPendentes.objects.all()
         headers_pendentes = [f.verbose_name for f in DadosPedidosPendentes._meta.fields]
         rows_pendentes = [
             [get_field_value(o, f) for f in DadosPedidosPendentes._meta.fields]
-            for o in DadosPedidosPendentes.objects.all()
+            for o in qs_pendentes
         ]
+
+        qs_adiantados = DadosPedidosAdiantados.objects.all()
         headers_adiantados = [f.verbose_name for f in DadosPedidosAdiantados._meta.fields]
         rows_adiantados = [
             [get_field_value(o, f) for f in DadosPedidosAdiantados._meta.fields]
-            for o in DadosPedidosAdiantados.objects.all()
+             for o in qs_adiantados
         ]
+
+        qs_pagos = DadosPedidosPagos.objects.all()
         headers_pagos = [f.verbose_name for f in DadosPedidosPagos._meta.fields]
         rows_pagos = [
-                [getattr(o, f.name) for f in DadosPedidosPagos._meta.fields]
-            for o in DadosPedidosPagos.objects.all()
+            [getattr(o, f.name) for f in DadosPedidosPagos._meta.fields]
+            for o in qs_pagos
         ]
+
+
+        total_pedidos_pendentes = qs_pendentes.count()
+        pedidos_pendentes_no_prazo = 0
+        pedidos_pendentes_fora_prazo = 0
+        perc_pedidos_pendentes_no_prazo = (
+            round((pedidos_pendentes_no_prazo / total_pedidos_pendentes) * 100, 2)
+            if total_pedidos_pendentes
+            else 0
+        )
+        pedido_com_erro_pendente = 0
+
+        total_pedidos_adiantados = qs_adiantados.count()
+        pedidos_adiantados_no_prazo = 0
+        pedidos_adiantados_fora_prazo = 0
+        perc_pedidos_adiantados_no_prazo = (
+            round((pedidos_adiantados_no_prazo / total_pedidos_adiantados) * 100, 2)
+            if total_pedidos_adiantados
+            else 0
+        )
+        pedido_com_erro_adiantado = 0
+
+        total_pedidos_pagos = qs_pagos.count()
+        pedidos_pagos_no_prazo = 0
+        pedidos_pagos_fora_prazo = 0
+        perc_pedidos_pagos_no_prazo = (
+            round((pedidos_pagos_no_prazo / total_pedidos_pagos) * 100, 2)
+            if total_pedidos_pagos
+            else 0
+        )
+        pedido_com_erro_pago = 0
+
         return render(request, 'ics_app/home.html', {
             'main_tabs': main_tabs,
             'main_tab': main_tab,
@@ -186,8 +223,22 @@ def home(request: HttpRequest) -> HttpResponse:
             'sap_supplier': sap_supplier,
             'headers_pendentes': headers_pendentes,
             'rows_pendentes': rows_pendentes,
-            'headers_adiantados': headers_adiantados,
+            'total_pedidos_pendentes': total_pedidos_pendentes,
+            'pedidos_pendentes_no_prazo': pedidos_pendentes_no_prazo,
+            'pedidos_pendentes_fora_prazo': pedidos_pendentes_fora_prazo,
+            'perc_pedidos_pendentes_no_prazo': perc_pedidos_pendentes_no_prazo,
+            'pedido_com_erro_pendente': pedido_com_erro_pendente,
+            'total_pedidos_adiantados': total_pedidos_adiantados,
+            'pedidos_adiantados_no_prazo': pedidos_adiantados_no_prazo,
+            'pedidos_adiantados_fora_prazo': pedidos_adiantados_fora_prazo,
+            'perc_pedidos_adiantados_no_prazo': perc_pedidos_adiantados_no_prazo,
+            'pedido_com_erro_adiantado': pedido_com_erro_adiantado,
             'rows_adiantados': rows_adiantados,
+            'total_pedidos_pagos': total_pedidos_pagos,
+            'pedidos_pagos_no_prazo': pedidos_pagos_no_prazo,
+            'pedidos_pagos_fora_prazo': pedidos_pagos_fora_prazo,
+            'perc_pedidos_pagos_no_prazo': perc_pedidos_pagos_no_prazo,
+            'pedido_com_erro_pago': pedido_com_erro_pago,
             'headers_pagos': headers_pagos,
             'rows_pagos': rows_pagos,
             'df_html': None,
